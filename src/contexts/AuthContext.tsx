@@ -1,107 +1,110 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { authAPI } from '@/services/api';
-import { User, AuthResponse } from '@/types';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { authAPI } from '@/services/api'
+
+interface User {
+  user_id: number
+  nik: string
+  name: string
+  email: string
+  role: 'employee' | 'finance_area' | 'finance_regional'
+  department?: string
+  position?: string
+  office_location?: string
+  area_code?: string
+  regional_code?: string
+}
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isEmployee: boolean;
-  isFinanceArea: boolean;
-  isFinanceRegional: boolean;
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<User>
+  logout: () => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (token) {
-      fetchUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  const fetchUser = async () => {
-    try {
-      const response = await authAPI.me();
-      setUser(response.data);
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      localStorage.removeItem('token');
-      setToken(null);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await authAPI.login(email, password);
-      const data: AuthResponse = response.data;
+    const initAuth = () => {
+      const savedToken = localStorage.getItem('token')
+      const savedUser = localStorage.getItem('user')
       
-      localStorage.setItem('token', data.access_token);
-      setToken(data.access_token);
-      setUser(data.user);
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      throw new Error(error.response?.data?.error || 'Login failed');
-    }
-  };
-
-  const logout = async () => {
-    try {
-      if (token) {
-        await authAPI.logout();
+      if (savedToken && savedUser) {
+        try {
+          setToken(savedToken)
+          setUser(JSON.parse(savedUser))
+        } catch (error) {
+          console.error('Failed to parse saved user:', error)
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setToken(null)
+          setUser(null)
+        }
       }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('token');
-      setToken(null);
-      setUser(null);
+      
+      setIsLoading(false)
     }
-  };
 
-  const isEmployee = user?.role === 'employee';
-  const isFinanceArea = user?.role === 'finance_area';
-  const isFinanceRegional = user?.role === 'finance_regional';
+    initAuth()
+  }, [])
+
+  const login = async (email: string, password: string): Promise<User> => {
+    try {
+      console.log('🔐 Attempting login...', email)
+      const response = await authAPI.login(email, password)
+      const { access_token, user: userData } = response.data
+      
+      console.log('✅ Login success:', userData)
+      
+      localStorage.setItem('token', access_token)
+      localStorage.setItem('user', JSON.stringify(userData))
+      setToken(access_token)
+      setUser(userData)
+      
+      return userData
+    } catch (error: any) {
+      console.error('❌ Login error:', error)
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setToken(null)
+      setUser(null)
+      throw new Error(error.response?.data?.error || 'Login failed')
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setToken(null)
+    setUser(null)
+  }
 
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
-        login,
-        logout,
         isAuthenticated: !!token && !!user,
         isLoading,
-        isEmployee,
-        isFinanceArea,
-        isFinanceRegional,
+        login,
+        logout,
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}

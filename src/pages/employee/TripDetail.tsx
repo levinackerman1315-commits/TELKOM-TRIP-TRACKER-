@@ -1,34 +1,52 @@
-import { useParams, Link } from 'react-router-dom';
-import { getTripById } from '@/data/mockTrips';
-import { TripStatusTracker } from '@/components/admin/TripStatusTracker';
-import { ArrowLeft, MapPin, Calendar, DollarSign, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { tripAPI, advanceAPI, receiptAPI } from '@/services/api';
+import { Trip, Advance, Receipt } from '@/types';
 
-export default function EmployeeTripDetail() {
+export default function TripDetail() {
   const { id } = useParams<{ id: string }>();
-  const trip = getTripById(id || '');
+  const navigate = useNavigate();
 
-  if (!trip) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Trip Not Found</h2>
-          <p className="text-gray-600 mb-4">The trip you're looking for doesn't exist.</p>
-          <Link
-            to="/employee/dashboard"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Back to My Trips
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const [trip, setTrip] = useState<Trip | null>(null);
+  const [advances, setAdvances] = useState<Advance[]>([]);
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'overview' | 'advances' | 'receipts'>('overview');
+
+  useEffect(() => {
+    if (id) {
+      fetchTripDetail();
+    }
+  }, [id]);
+
+  const fetchTripDetail = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch trip detail
+      const tripResponse = await tripAPI.getById(Number(id));
+      setTrip(tripResponse.data.data);
+
+      // Fetch advances for this trip
+      const advancesResponse = await advanceAPI.getAll({ trip_id: id });
+      setAdvances(advancesResponse.data.data || []);
+
+      // Fetch receipts for this trip
+      const receiptsResponse = await receiptAPI.getAll({ trip_id: id });
+      setReceipts(receiptsResponse.data.data || []);
+
+    } catch (error) {
+      console.error('Failed to fetch trip detail:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 0
     }).format(amount);
   };
 
@@ -36,104 +54,453 @@ export default function EmployeeTripDetail() {
     return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
+      year: 'numeric'
     });
   };
+
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { color: string; text: string }> = {
+      active: { color: 'bg-green-100 text-green-800', text: 'Active' },
+      awaiting_review: { color: 'bg-yellow-100 text-yellow-800', text: 'Awaiting Review' },
+      under_review_area: { color: 'bg-blue-100 text-blue-800', text: 'Under Review (Area)' },
+      under_review_regional: { color: 'bg-purple-100 text-purple-800', text: 'Under Review (Regional)' },
+      completed: { color: 'bg-gray-100 text-gray-800', text: 'Completed' },
+      cancelled: { color: 'bg-red-100 text-red-800', text: 'Cancelled' },
+    };
+    const badge = badges[status] || { color: 'bg-gray-100 text-gray-800', text: status };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
+        {badge.text}
+      </span>
+    );
+  };
+
+  const getAdvanceStatusBadge = (status: string) => {
+    const badges: Record<string, { color: string; text: string }> = {
+      pending: { color: 'bg-yellow-100 text-yellow-800', text: 'Pending' },
+      approved_area: { color: 'bg-blue-100 text-blue-800', text: 'Approved by Area' },
+      approved_regional: { color: 'bg-purple-100 text-purple-800', text: 'Approved by Regional' },
+      transferred: { color: 'bg-green-100 text-green-800', text: 'Transferred' },
+      rejected: { color: 'bg-red-100 text-red-800', text: 'Rejected' },
+    };
+    const badge = badges[status] || { color: 'bg-gray-100 text-gray-800', text: status };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
+        {badge.text}
+      </span>
+    );
+  };
+
+  const handleCancelTrip = async () => {
+    if (!window.confirm('Are you sure you want to cancel this trip?')) {
+      return;
+    }
+
+    try {
+      await tripAPI.cancel(Number(id));
+      alert('Trip cancelled successfully');
+      navigate('/employee/dashboard');
+    } catch (error) {
+      console.error('Failed to cancel trip:', error);
+      alert('Failed to cancel trip');
+    }
+  };
+
+  const handleSubmitForReview = async () => {
+    if (!window.confirm('Submit this trip for review? You cannot make changes after submission.')) {
+      return;
+    }
+
+    try {
+      await tripAPI.submit(Number(id));
+      alert('Trip submitted for review successfully');
+      fetchTripDetail(); // Refresh data
+    } catch (error: any) {
+      console.error('Failed to submit trip:', error);
+      alert(error.response?.data?.message || 'Failed to submit trip');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading trip detail...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!trip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Trip Not Found</h2>
+          <Link
+            to="/employee/dashboard"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const totalAdvance = advances
+    .filter(a => a.status === 'transferred')
+    .reduce((sum, a) => sum + (a.approved_amount || 0), 0);
+
+  const totalReceipts = receipts.reduce((sum, r) => sum + r.amount, 0);
+  const balance = totalAdvance - totalReceipts;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link
-            to="/employee/dashboard"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Trip Details</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            View your business trip request details
-          </p>
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{trip.destination}</h1>
+                {getStatusBadge(trip.status)}
+              </div>
+              <p className="text-sm text-gray-500">Trip #{trip.trip_number}</p>
+            </div>
+            <Link
+              to="/employee/dashboard"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            >
+              ← Back
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Trip Info Card */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <MapPin className="h-4 w-4" />
-                  Destination
-                </label>
-                <p className="text-lg font-semibold text-gray-900">{trip.destination}</p>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Trip Info & Actions */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Trip Info Card */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Trip Information</h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-gray-500">Purpose</p>
+                  <p className="text-sm text-gray-900">{trip.purpose}</p>
+                </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <FileText className="h-4 w-4" />
-                  Purpose
-                </label>
-                <p className="text-gray-900">{trip.purpose}</p>
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Start Date</p>
+                    <p className="text-sm font-medium text-gray-900">{formatDate(trip.start_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">End Date</p>
+                    <p className="text-sm font-medium text-gray-900">{formatDate(trip.end_date)}</p>
+                  </div>
+                </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <DollarSign className="h-4 w-4" />
-                  Advance Amount
-                </label>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(trip.advance_amount)}
-                </p>
+                <div>
+                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="text-sm font-medium text-gray-900">{trip.duration} days</p>
+                </div>
+
+                {trip.extended_end_date && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">Extended Until</p>
+                    <p className="text-sm font-medium text-orange-600">{formatDate(trip.extended_end_date)}</p>
+                    {trip.extension_reason && (
+                      <p className="text-xs text-gray-600 mt-1">{trip.extension_reason}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500 mb-1 block">
-                  Employee
-                </label>
-                <p className="text-gray-900 font-medium">{trip.employee_name}</p>
-                <p className="text-sm text-gray-500">{trip.employee_id}</p>
+            {/* Financial Summary */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Financial Summary</h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Total Advance</span>
+                  <span className="text-sm font-semibold text-blue-600">{formatCurrency(totalAdvance)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Total Expenses</span>
+                  <span className="text-sm font-semibold text-green-600">{formatCurrency(totalReceipts)}</span>
+                </div>
+                <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                  <span className="text-sm font-semibold text-gray-900">Balance</span>
+                  <span className={`text-sm font-bold ${balance > 0 ? 'text-orange-600' : balance < 0 ? 'text-purple-600' : 'text-gray-600'}`}>
+                    {formatCurrency(balance)}
+                  </span>
+                </div>
+                {balance > 0 && (
+                  <p className="text-xs text-orange-600">You need to refund {formatCurrency(balance)}</p>
+                )}
+                {balance < 0 && (
+                  <p className="text-xs text-purple-600">Company owes you {formatCurrency(Math.abs(balance))}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            {trip.status === 'active' && (
+              <div className="bg-white rounded-lg shadow p-6 space-y-3">
+                <h3 className="font-semibold text-gray-900 mb-4">Actions</h3>
+                
+                <button
+                  onClick={() => navigate(`/employee/advances/new?trip_id=${trip.trip_id}`)}
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+                >
+                  💰 Request Advance
+                </button>
+
+                <button
+                  onClick={() => navigate(`/employee/receipts/new?trip_id=${trip.trip_id}`)}
+                  className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm"
+                >
+                  📄 Upload Receipt
+                </button>
+
+                <button
+                  onClick={() => navigate(`/employee/trips/${trip.trip_id}/extension`)}
+                  className="w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium text-sm"
+                >
+                  📅 Request Extension
+                </button>
+
+                <button
+                  onClick={handleSubmitForReview}
+                  className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm"
+                >
+                  ✅ Submit for Review
+                </button>
+
+                <button
+                  onClick={handleCancelTrip}
+                  className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm"
+                >
+                  ❌ Cancel Trip
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Tabs */}
+          <div className="lg:col-span-2">
+            {/* Tabs */}
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="border-b border-gray-200">
+                <nav className="flex -mb-px">
+                  <button
+                    onClick={() => setActiveTab('overview')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
+                      activeTab === 'overview'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('advances')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
+                      activeTab === 'advances'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Advances ({advances.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('receipts')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
+                      activeTab === 'receipts'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Receipts ({receipts.length})
+                  </button>
+                </nav>
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-1">
-                  <Calendar className="h-4 w-4" />
-                  Travel Dates
-                </label>
-                <p className="text-gray-900">
-                  {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
-                </p>
-              </div>
+              <div className="p-6">
+                {/* Overview Tab */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Trip Timeline</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Trip Created</p>
+                            <p className="text-xs text-gray-500">{formatDate(trip.created_at)}</p>
+                          </div>
+                        </div>
+                        
+                        {trip.submitted_at && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Submitted for Review</p>
+                              <p className="text-xs text-gray-500">{formatDate(trip.submitted_at)}</p>
+                            </div>
+                          </div>
+                        )}
 
-              <div>
-                <label className="text-sm font-medium text-gray-500 mb-1 block">
-                  Request Date
-                </label>
-                <p className="text-gray-900">
-                  {new Date(trip.created_at).toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
+                        {trip.completed_at && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Completed</p>
+                              <p className="text-xs text-gray-500">{formatDate(trip.completed_at)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-2">Quick Stats</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-blue-700">Total Advances</p>
+                          <p className="font-semibold text-blue-900">{advances.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-blue-700">Total Receipts</p>
+                          <p className="font-semibold text-blue-900">{receipts.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-blue-700">Verified Receipts</p>
+                          <p className="font-semibold text-blue-900">
+                            {receipts.filter(r => r.is_verified).length}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-blue-700">Pending Receipts</p>
+                          <p className="font-semibold text-blue-900">
+                            {receipts.filter(r => !r.is_verified).length}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Advances Tab */}
+                {activeTab === 'advances' && (
+                  <div className="space-y-4">
+                    {advances.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No advances yet</p>
+                        {trip.status === 'active' && (
+                          <button
+                            onClick={() => navigate(`/employee/advances/new?trip_id=${trip.trip_id}`)}
+                            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          >
+                            Request Advance
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      advances.map((advance) => (
+                        <div key={advance.advance_id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{advance.advance_number}</p>
+                              <p className="text-xs text-gray-500 capitalize">{advance.request_type} Request</p>
+                            </div>
+                            {getAdvanceStatusBadge(advance.status)}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-gray-500">Requested</p>
+                              <p className="font-semibold text-gray-900">{formatCurrency(advance.requested_amount)}</p>
+                            </div>
+                            {advance.approved_amount && (
+                              <div>
+                                <p className="text-gray-500">Approved</p>
+                                <p className="font-semibold text-green-600">{formatCurrency(advance.approved_amount)}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {advance.request_reason && (
+                            <p className="text-xs text-gray-600 mt-2">{advance.request_reason}</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Receipts Tab */}
+                {activeTab === 'receipts' && (
+                  <div className="space-y-4">
+                    {receipts.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No receipts yet</p>
+                        {trip.status === 'active' && (
+                          <button
+                            onClick={() => navigate(`/employee/receipts/new?trip_id=${trip.trip_id}`)}
+                            className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                          >
+                            Upload Receipt
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      receipts.map((receipt) => (
+                        <div key={receipt.receipt_id} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{receipt.receipt_number}</p>
+                              <p className="text-xs text-gray-500 capitalize">{receipt.category}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              receipt.is_verified
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {receipt.is_verified ? 'Verified' : 'Pending'}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Amount</span>
+                              <span className="font-semibold text-gray-900">{formatCurrency(receipt.amount)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Date</span>
+                              <span className="text-gray-900">{formatDate(receipt.receipt_date)}</span>
+                            </div>
+                            {receipt.merchant_name && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Merchant</span>
+                                <span className="text-gray-900">{receipt.merchant_name}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-gray-600 mt-2">{receipt.description}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Status Tracking */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Trip Progress</h2>
-          <TripStatusTracker currentStatus={trip.status} history={trip.history} />
         </div>
       </div>
     </div>

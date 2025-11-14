@@ -12,6 +12,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '@/contexts/AuthContext';
 
 // Mock data
 const pendingRequests = [
@@ -52,6 +53,7 @@ const approvedRequests = [
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const stats = {
     pendingApproval: pendingRequests.length,
