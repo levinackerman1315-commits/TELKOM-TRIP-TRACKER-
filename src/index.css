@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Telkom Akses Color Scheme */
+    /* Background: #F5F5F5 - Abu sangat muda */
+    --background: 0 0% 96%;
+    /* Foreground: #2E2E2E - Abu gelap untuk teks */
+    --foreground: 0 0% 18%;
+
+    /* Card: #FFFFFF - Putih bersih */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 18%;
+
+    /* Primary: #E60000 - Telkom Red */
+    --primary: 0 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: #F5F5F5 - Abu muda */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 18%;
+
+    /* Muted: Abu muda untuk background tidak aktif */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    /* Accent: #FFD100 - Kuning hangat */
+    --accent: 48 100% 50%;
+    --accent-foreground: 0 0% 18%;
+
+    /* Accent Blue: #007BFF - Biru digital */
+    --accent-blue: 211 100% 50%;
+    --accent-blue-foreground: 0 0% 100%;
+
+    /* Destructive: #D32F2F - Merah tua untuk reject/alert */
+    --destructive: 0 67% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success: #4CAF50 - Hijau untuk approved */
+    --success: 122 39% 49%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning: #FFD100 - Kuning untuk pending */
+    --warning: 48 100% 50%;
+    --warning-foreground: 0 0% 18%;
+
+    /* Sidebar: #2C2C2C - Abu gelap */
+    --sidebar: 0 0% 17%;
+    --sidebar-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 100% 45%;
+
+    --radius: 0.5rem;
+
+    /* Gradient: Telkom Red gradient */
+    --gradient-primary: linear-gradient(135deg, hsl(0 100% 45%) 0%, hsl(0 100% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(48 100% 50%) 0%, hsl(45 100% 60%) 100%);
+    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.08);
+    --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.12);
+  }
+
+  .dark {
+    /* Dark mode untuk Telkom Akses (opsional) */
+    --background: 0 0% 12%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 17%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 17%;
+    --popover-foreground: 0 0% 96%;
+
+    /* Primary tetap Telkom Red */
+    --primary: 0 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 22%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 0 0% 22%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 48 100% 50%;
+    --accent-foreground: 0 0% 18%;
+
+    --accent-blue: 211 100% 50%;
+    --accent-blue-foreground: 0 0% 100%;
+
+    --destructive: 0 67% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 122 39% 49%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 48 100% 50%;
+    --warning-foreground: 0 0% 18%;
+
+    --sidebar: 0 0% 10%;
+    --sidebar-foreground: 0 0% 100%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 0 100% 45%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(0 100% 45%) 0%, hsl(0 100% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(48 100% 50%) 0%, hsl(45 100% 60%) 100%);
+    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+    --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
