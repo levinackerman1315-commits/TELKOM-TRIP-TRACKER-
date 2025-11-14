@@ -198,7 +198,7 @@ const LandingPage = () => {
             <button
               onClick={() => navigate("/login")}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
+            >            FILESYSTEM_DISK=public
               Login
             </button>
           </div>
