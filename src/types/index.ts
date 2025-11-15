@@ -271,3 +271,110 @@ export interface DashboardStats {
   pending_reviews?: number;
   pending_settlements?: number;
 }
+// src/types/index.ts
+
+export interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  role: 'employee' | 'finance_area' | 'finance_regional';
+  created_at: string;
+  updated_at: string;
+}
+
+// ✅ TAMBAHKAN INTERFACE INI
+export interface TripStatusHistory {
+  history_id: number;
+  trip_id: number;
+  old_status?: string;
+  new_status: string;
+  changed_by: number;
+  notes?: string;
+  changed_at: string;
+  changer?: User;
+    user_id: number;
+    name: string;
+    email: string;
+  };
+
+export interface Trip {
+  trip_id: number;
+  user_id: number;
+  trip_number: string;
+  destination: string;
+  purpose: string;
+  start_date: string;
+  end_date: string;
+  duration: number;
+  extended_end_date?: string;
+  extension_reason?: string;
+  extension_requested_at?: string;
+  estimated_budget?: number;
+  total_advance: number;
+  total_expenses: number;
+  status: 'active' | 'awaiting_review' | 'under_review_area' | 'under_review_regional' | 'completed' | 'cancelled';
+  submitted_at?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+  advances?: Advance[];
+  receipts?: Receipt[];
+  history?: TripStatusHistory[]; // ✅ TAMBAHKAN INI
+}
+
+export interface Advance {
+  advance_id: number;
+  trip_id: number;
+  advance_number: string;
+  request_type: 'initial' | 'additional';
+  requested_amount: number;
+  approved_amount?: number;
+  status: 'pending' | 'approved_area' | 'approved_regional' | 'rejected' | 'transferred';
+  request_reason?: string;
+  transfer_date?: string;
+  transfer_reference?: string;
+  requested_at: string;
+  approved_at_area?: string;
+  approved_at_regional?: string;
+  approved_by_area?: number;
+  approved_by_regional?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Receipt {
+  receipt_id: number;
+  trip_id: number;
+  receipt_number: string;
+  category: 'fuel' | 'meal' | 'accommodation' | 'transportation' | 'parking' | 'toll' | 'other';
+  amount: number;
+  receipt_date: string;
+  merchant_name?: string;
+  description: string;
+  image_path?: string;
+  is_verified: boolean;
+  verified_by?: number;
+  verified_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Settlement {
+  settlement_id: number;
+  trip_id: number;
+  total_advance: number;
+  total_expenses: number;
+  balance: number;
+  settlement_status: string;
+  settlement_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface TripStatusTrackerProps {
+  currentStatus: string;
+  history?: (TripStatusHistory & { old_status?: string })[]; // Make old_status optional
+}
+

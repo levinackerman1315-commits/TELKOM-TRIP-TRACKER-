@@ -507,6 +507,558 @@
 //   );
 // }
 
+// import { useState, useEffect } from 'react'
+// import { useParams, useNavigate, Link } from 'react-router-dom'
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { Badge } from "@/components/ui/badge"
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// import { 
+//   ArrowLeft, 
+//   MapPin, 
+//   Calendar, 
+//   DollarSign, 
+//   FileText,
+//   Clock,
+//   Receipt as ReceiptIcon,
+//   CreditCard,
+//   CheckCircle2,
+//   XCircle,
+//   AlertCircle
+// } from 'lucide-react'
+// import { tripAPI, advanceAPI, receiptAPI } from '@/services/api'
+// import { Trip, Advance, Receipt } from '@/types'
+
+// const getStatusBadge = (status: string) => {
+//   const statusMap: Record<string, { variant: any; icon: any; label: string }> = {
+//     active: { variant: 'default', icon: CheckCircle2, label: 'Active' },
+//     awaiting_review: { variant: 'secondary', icon: Clock, label: 'Awaiting Review' },
+//     under_review_area: { variant: 'secondary', icon: AlertCircle, label: 'Under Review (Area)' },
+//     under_review_regional: { variant: 'secondary', icon: AlertCircle, label: 'Under Review (Regional)' },
+//     completed: { variant: 'outline', icon: CheckCircle2, label: 'Completed' },
+//     cancelled: { variant: 'destructive', icon: XCircle, label: 'Cancelled' },
+//   }
+  
+//   const status_info = statusMap[status] || statusMap.active
+//   const Icon = status_info.icon
+  
+//   return (
+//     <Badge variant={status_info.variant} className="gap-1">
+//       <Icon className="w-3 h-3" />
+//       {status_info.label}
+//     </Badge>
+//   )
+// }
+
+// const getAdvanceStatusBadge = (status: string) => {
+//   const statusMap: Record<string, { color: string; label: string }> = {
+//     pending: { color: 'bg-warning text-warning-foreground', label: 'Pending' },
+//     approved_area: { color: 'bg-blue-100 text-blue-800', label: 'Approved by Area' },
+//     approved_regional: { color: 'bg-purple-100 text-purple-800', label: 'Approved by Regional' },
+//     transferred: { color: 'bg-success text-success-foreground', label: 'Transferred' },
+//     rejected: { color: 'bg-destructive text-destructive-foreground', label: 'Rejected' },
+//   }
+  
+//   const { color, label } = statusMap[status] || { color: 'bg-gray-100 text-gray-800', label: status }
+  
+//   return <Badge className={color}>{label}</Badge>
+// }
+
+// export default function TripDetail() {
+//   const { id } = useParams<{ id: string }>()
+//   const navigate = useNavigate()
+
+//   const [trip, setTrip] = useState<Trip | null>(null)
+//   const [advances, setAdvances] = useState<Advance[]>([])
+//   const [receipts, setReceipts] = useState<Receipt[]>([])
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   useEffect(() => {
+//     if (id) {
+//       fetchTripDetail()
+//     }
+//   }, [id])
+
+//   const fetchTripDetail = async () => {
+//     try {
+//       setIsLoading(true)
+      
+//       const tripResponse = await tripAPI.getById(Number(id))
+//       setTrip(tripResponse.data.data)
+
+//       const advancesResponse = await advanceAPI.getAll({ trip_id: id })
+//       setAdvances(advancesResponse.data.data || [])
+
+//       const receiptsResponse = await receiptAPI.getAll({ trip_id: id })
+//       setReceipts(receiptsResponse.data.data || [])
+
+//     } catch (error) {
+//       console.error('Failed to fetch trip detail:', error)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }
+
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('id-ID', {
+//       style: 'currency',
+//       currency: 'IDR',
+//       minimumFractionDigits: 0
+//     }).format(amount)
+//   }
+
+//   // const formatDate = (dateString: string) => {
+//   //   return new Date(dateString).toLocaleDateString('id-ID', {
+//   //     day: 'numeric',
+//   //     month: 'long',
+//   //     year: 'numeric'
+//   //   })
+//   // }
+// const formatDate = (dateString: string) => {
+//   try {
+//     // Jika dateString sudah dalam format ISO (misalnya: "2025-11-15T00:00:00Z"), gunakan langsung
+//     const date = new Date(dateString)
+//     if (isNaN(date.getTime())) {
+//       throw new Error('Invalid date')
+//     }
+//     return date.toLocaleDateString('id-ID', {
+//       day: 'numeric',
+//       month: 'long',
+//       year: 'numeric'
+//     })
+//   } catch (error) {
+//     return 'Invalid Date' // atau tampilkan pesan error yang lebih baik
+//   }
+// }
+//   const handleCancelTrip = async () => {
+//     if (!window.confirm('Are you sure you want to cancel this trip?')) return
+
+//     try {
+//       await tripAPI.cancel(Number(id))
+//       alert('Trip cancelled successfully')
+//       navigate('/employee/dashboard')
+//     } catch (error) {
+//       console.error('Failed to cancel trip:', error)
+//       alert('Failed to cancel trip')
+//     }
+//   }
+
+//   const handleSubmitForReview = async () => {
+//     if (!window.confirm('Submit this trip for review? You cannot make changes after submission.')) return
+
+//     try {
+//       await tripAPI.submit(Number(id))
+//       alert('Trip submitted for review successfully')
+//       fetchTripDetail()
+//     } catch (error: any) {
+//       console.error('Failed to submit trip:', error)
+//       alert(error.response?.data?.message || 'Failed to submit trip')
+//     }
+//   }
+
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-muted-foreground">Loading trip detail...</p>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   if (!trip) {
+//     return (
+//       <div className="min-h-screen bg-background flex items-center justify-center">
+//         <div className="text-center">
+//           <h2 className="text-2xl font-bold mb-2">Trip Not Found</h2>
+//           <p className="text-muted-foreground mb-4">The trip you're looking for doesn't exist.</p>
+//           <Button onClick={() => navigate('/employee/dashboard')}>
+//             Back to Dashboard
+//           </Button>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   // GANTI perhitungan lama:
+//   // const totalAdvance = advances
+//   //   .filter(a => a.status === 'transferred')
+//   //   .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
+
+//   const requestedAdvanceTotal = advances
+//   .filter(a => a.status !== 'rejected')
+//   .reduce((sum, a) => sum + (typeof a.requested_amount === 'number' ? a.requested_amount : 0), 0)
+
+//   const approvedAdvanceTotal = advances
+//     .filter(a => ['approved_area','approved_regional','transferred'].includes(a.status))
+//     .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
+
+//   const transferredAdvanceTotal = advances
+//     .filter(a => a.status === 'transferred')
+//     .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
+
+//   const totalReceipts = receipts.reduce((sum, r) => sum + r.amount, 0)
+//   const balance = transferredAdvanceTotal - totalReceipts
+
+//   const estimatedBudget = trip.estimated_budget || 0
+
+//   return (
+//     <div className="min-h-screen bg-background">
+//       {/* Header */}
+//       <div className="bg-gradient-primary border-b shadow-soft">
+//         <div className="container mx-auto px-4 py-6">
+//           <Link
+//             to="/employee/dashboard"
+//             className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4"
+//           >
+//             <ArrowLeft className="h-4 w-4" />
+//             Back to Dashboard
+//           </Link>
+//           <div className="flex items-start justify-between">
+//             <div>
+//               <h1 className="text-2xl font-bold text-white mb-1">{trip.destination}</h1>
+//               <p className="text-sm text-white/80">Trip #{trip.trip_number}</p>
+//             </div>
+//             {getStatusBadge(trip.status)}
+//           </div>
+//         </div>
+//       </div>
+
+//       <div className="container mx-auto px-4 py-8">
+//         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//           {/* Left Column - Trip Info */}
+//           <div className="space-y-6">
+//             {/* Trip Information */}
+//             <Card className="shadow-soft">
+//               <CardHeader>
+//                 <CardTitle className="text-lg">Trip Information</CardTitle>
+//               </CardHeader>
+//               <CardContent className="space-y-4">
+//                 <div>
+//                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+//                     <FileText className="h-4 w-4" />
+//                     Purpose
+//                   </label>
+//                   <p className="text-sm">{trip.purpose}</p>
+//                 </div>
+
+//                 <div className="grid grid-cols-2 gap-3">
+//                   <div>
+//                     <label className="text-xs text-muted-foreground mb-1 block">Start Date</label>
+//                     <p className="text-sm font-medium">{formatDate(trip.start_date)}</p>
+//                   </div>
+//                   <div>
+//                     <label className="text-xs text-muted-foreground mb-1 block">End Date</label>
+//                     <p className="text-sm font-medium">{formatDate(trip.end_date)}</p>
+//                   </div>
+//                 </div>
+
+//                 <div>
+//                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+//                     <Clock className="h-4 w-4" />
+//                     Duration
+//                   </label>
+//                   <p className="text-sm font-medium">{trip.duration} days</p>
+//                 </div>
+
+//                 {trip.extended_end_date && (
+//                   <div className="pt-3 border-t">
+//                     <label className="text-xs text-muted-foreground mb-1 block">Extended Until</label>
+//                     <p className="text-sm font-medium text-warning">{formatDate(trip.extended_end_date)}</p>
+//                     {trip.extension_reason && (
+//                       <p className="text-xs text-muted-foreground mt-1">{trip.extension_reason}</p>
+//                     )}
+//                   </div>
+//                 )}
+//               </CardContent>
+//             </Card>
+
+//             {/* Financial Summary */}
+//             <Card className="shadow-soft">
+//               <CardHeader>
+//                 <CardTitle className="text-lg flex items-center gap-2">
+//                   <DollarSign className="h-5 w-5" />
+//                   Financial Summary
+//                 </CardTitle>
+//                 <CardDescription>Overview of budget, advances, and expenses</CardDescription>
+//               </CardHeader>
+//               <CardContent className="space-y-3">
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Estimated Budget</span>
+//                   <span className="text-sm font-semibold">{formatCurrency(estimatedBudget)}</span>
+//                 </div>
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Requested Advance Total</span>
+//                   <span className="text-sm font-semibold text-warning">{formatCurrency(requestedAdvanceTotal)}</span>
+//                 </div>
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Approved Advance Total</span>
+//                   <span className="text-sm font-semibold text-primary">{formatCurrency(approvedAdvanceTotal)}</span>
+//                 </div>
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Transferred Advance Total</span>
+//                   <span className="text-sm font-semibold text-success">{formatCurrency(transferredAdvanceTotal)}</span>
+//                 </div>
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Total Expenses</span>
+//                   <span className="text-sm font-semibold text-success">{formatCurrency(totalReceipts)}</span>
+//                 </div>
+//                 <div className="pt-3 border-t flex justify-between items-center">
+//                   <span className="text-sm font-semibold">Balance (Transferred - Expenses)</span>
+//                   <span className={`text-sm font-bold ${balance > 0 ? 'text-warning' : balance < 0 ? 'text-purple-600' : 'text-muted-foreground'}`}>
+//                     {formatCurrency(balance)}
+//                   </span>
+//                 </div>
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-muted-foreground">Remaining Budget (Est - Expenses)</span>
+//                   <span className="text-sm font-semibold">
+//                     {formatCurrency(Math.max(estimatedBudget - totalReceipts, 0))}
+//                   </span>
+//                 </div>
+//               </CardContent>
+//             </Card>
+
+//             {/* Actions */}
+//             {trip.status === 'active' && (
+//               <Card className="shadow-soft">
+//                 <CardHeader>
+//                   <CardTitle className="text-lg">Actions</CardTitle>
+//                 </CardHeader>
+//                 <CardContent className="space-y-2">
+//                   <Button
+//                     onClick={() => navigate(`/employee/advances/new?trip_id=${trip.trip_id}`)}
+//                     className="w-full"
+//                     variant="default"
+//                   >
+//                     <CreditCard className="w-4 h-4 mr-2" />
+//                     Request Advance
+//                   </Button>
+
+//                   <Button
+//                     onClick={() => navigate(`/employee/receipts/new?trip_id=${trip.trip_id}`)}
+//                     className="w-full"
+//                     variant="outline"
+//                   >
+//                     <ReceiptIcon className="w-4 h-4 mr-2" />
+//                     Upload Receipt
+//                   </Button>
+
+//                   <Button
+//                     onClick={() => navigate(`/employee/trips/${trip.trip_id}/extension`)}
+//                     className="w-full"
+//                     variant="outline"
+//                   >
+//                     <Calendar className="w-4 h-4 mr-2" />
+//                     Request Extension
+//                   </Button>
+
+//                   <Button
+//                     onClick={handleSubmitForReview}
+//                     className="w-full"
+//                     variant="secondary"
+//                   >
+//                     <CheckCircle2 className="w-4 h-4 mr-2" />
+//                     Submit for Review
+//                   </Button>
+
+//                   <Button
+//                     onClick={handleCancelTrip}
+//                     className="w-full"
+//                     variant="destructive"
+//                   >
+//                     <XCircle className="w-4 h-4 mr-2" />
+//                     Cancel Trip
+//                   </Button>
+//                 </CardContent>
+//               </Card>
+//             )}
+//           </div>
+
+//           {/* Right Column - Tabs */}
+//           <div className="lg:col-span-2">
+//             <Card className="shadow-soft">
+//               <Tabs defaultValue="overview" className="w-full">
+//                 <CardHeader>
+//                   <TabsList className="grid w-full grid-cols-3">
+//                     <TabsTrigger value="overview">Overview</TabsTrigger>
+//                     <TabsTrigger value="advances">Advances ({advances.length})</TabsTrigger>
+//                     <TabsTrigger value="receipts">Receipts ({receipts.length})</TabsTrigger>
+//                   </TabsList>
+//                 </CardHeader>
+
+//                 <CardContent>
+//                   {/* Overview Tab */}
+//                   <TabsContent value="overview" className="space-y-6">
+//                     <div>
+//                       <h4 className="font-semibold mb-3">Trip Timeline</h4>
+//                       <div className="space-y-3">
+//                         <div className="flex items-start gap-3">
+//                           <div className="w-2 h-2 bg-success rounded-full mt-2"></div>
+//                           <div>
+//                             <p className="text-sm font-medium">Trip Created</p>
+//                             <p className="text-xs text-muted-foreground">{formatDate(trip.created_at)}</p>
+//                           </div>
+//                         </div>
+                        
+//                         {trip.submitted_at && (
+//                           <div className="flex items-start gap-3">
+//                             <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+//                             <div>
+//                               <p className="text-sm font-medium">Submitted for Review</p>
+//                               <p className="text-xs text-muted-foreground">{formatDate(trip.submitted_at)}</p>
+//                             </div>
+//                           </div>
+//                         )}
+
+//                         {trip.completed_at && (
+//                           <div className="flex items-start gap-3">
+//                             <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+//                             <div>
+//                               <p className="text-sm font-medium">Completed</p>
+//                               <p className="text-xs text-muted-foreground">{formatDate(trip.completed_at)}</p>
+//                             </div>
+//                           </div>
+//                         )}
+//                       </div>
+//                     </div>
+
+//                     <Card className="bg-primary/5 border-primary/20">
+//                       <CardHeader>
+//                         <CardTitle className="text-base">Quick Stats</CardTitle>
+//                       </CardHeader>
+//                       <CardContent>
+//                         <div className="grid grid-cols-2 gap-4 text-sm">
+//                           <div>
+//                             <p className="text-muted-foreground">Total Advances</p>
+//                             <p className="font-semibold">{advances.length}</p>
+//                           </div>
+//                           <div>
+//                             <p className="text-muted-foreground">Total Receipts</p>
+//                             <p className="font-semibold">{receipts.length}</p>
+//                           </div>
+//                           <div>
+//                             <p className="text-muted-foreground">Verified Receipts</p>
+//                             <p className="font-semibold text-success">
+//                               {receipts.filter(r => r.is_verified).length}
+//                             </p>
+//                           </div>
+//                           <div>
+//                             <p className="text-muted-foreground">Pending Receipts</p>
+//                             <p className="font-semibold text-warning">
+//                               {receipts.filter(r => !r.is_verified).length}
+//                             </p>
+//                           </div>
+//                         </div>
+//                       </CardContent>
+//                     </Card>
+//                   </TabsContent>
+
+//                   {/* Advances Tab */}
+//                   <TabsContent value="advances" className="space-y-4">
+//                     {advances.length === 0 ? (
+//                       <div className="text-center py-8">
+//                         <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+//                         <p className="text-muted-foreground mb-4">No advances yet</p>
+//                         {trip.status === 'active' && (
+//                           <Button onClick={() => navigate(`/employee/advances/new?trip_id=${trip.trip_id}`)}>
+//                             Request Advance
+//                           </Button>
+//                         )}
+//                       </div>
+//                     ) : (
+//                       advances.map((advance) => (
+//                         <Card key={advance.advance_id} className="border">
+//                           <CardContent className="p-4">
+//                             <div className="flex items-start justify-between mb-3">
+//                               <div>
+//                                 <p className="font-medium">{advance.advance_number}</p>
+//                                 <p className="text-xs text-muted-foreground capitalize">{advance.request_type} Request</p>
+//                               </div>
+//                               {getAdvanceStatusBadge(advance.status)}
+//                             </div>
+                            
+//                             <div className="grid grid-cols-2 gap-3 text-sm">
+//                               <div>
+//                                 <p className="text-muted-foreground">Requested</p>
+//                                 <p className="font-semibold">{formatCurrency(advance.requested_amount)}</p>
+//                               </div>
+//                               {advance.approved_amount && (
+//                                 <div>
+//                                   <p className="text-muted-foreground">Approved</p>
+//                                   <p className="font-semibold text-success">{formatCurrency(advance.approved_amount)}</p>
+//                                 </div>
+//                               )}
+//                             </div>
+
+//                             {advance.request_reason && (
+//                               <p className="text-xs text-muted-foreground mt-2">{advance.request_reason}</p>
+//                             )}
+//                           </CardContent>
+//                         </Card>
+//                       ))
+//                     )}
+//                   </TabsContent>
+
+//                   {/* Receipts Tab */}
+//                   <TabsContent value="receipts" className="space-y-4">
+//                     {receipts.length === 0 ? (
+//                       <div className="text-center py-8">
+//                         <ReceiptIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+//                         <p className="text-muted-foreground mb-4">No receipts yet</p>
+//                         {trip.status === 'active' && (
+//                           <Button onClick={() => navigate(`/employee/receipts/new?trip_id=${trip.trip_id}`)}>
+//                             Upload Receipt
+//                           </Button>
+//                         )}
+//                       </div>
+//                     ) : (
+//                       receipts.map((receipt) => (
+//                         <Card key={receipt.receipt_id} className="border">
+//                           <CardContent className="p-4">
+//                             <div className="flex items-start justify-between mb-3">
+//                               <div>
+//                                 <p className="font-medium">{receipt.receipt_number}</p>
+//                                 <p className="text-xs text-muted-foreground capitalize">{receipt.category}</p>
+//                               </div>
+//                               <Badge variant={receipt.is_verified ? 'default' : 'secondary'}>
+//                                 {receipt.is_verified ? 'Verified' : 'Pending'}
+//                               </Badge>
+//                             </div>
+                            
+//                             <div className="space-y-2 text-sm">
+//                               <div className="flex justify-between">
+//                                 <span className="text-muted-foreground">Amount</span>
+//                                 <span className="font-semibold">{formatCurrency(receipt.amount)}</span>
+//                               </div>
+//                               <div className="flex justify-between">
+//                                 <span className="text-muted-foreground">Date</span>
+//                                 <span>{formatDate(receipt.receipt_date)}</span>
+//                               </div>
+//                               {receipt.merchant_name && (
+//                                 <div className="flex justify-between">
+//                                   <span className="text-muted-foreground">Merchant</span>
+//                                   <span>{receipt.merchant_name}</span>
+//                                 </div>
+//                               )}
+//                             </div>
+
+//                             <p className="text-xs text-muted-foreground mt-2">{receipt.description}</p>
+//                           </CardContent>
+//                         </Card>
+//                       ))
+//                     )}
+//                   </TabsContent>
+//                 </CardContent>
+//               </Tabs>
+//             </Card>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -515,8 +1067,6 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   ArrowLeft, 
-  MapPin, 
-  Calendar, 
   DollarSign, 
   FileText,
   Clock,
@@ -524,10 +1074,13 @@ import {
   CreditCard,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Calendar
 } from 'lucide-react'
 import { tripAPI, advanceAPI, receiptAPI } from '@/services/api'
 import { Trip, Advance, Receipt } from '@/types'
+import { AdvanceStatusTracker } from '@/components/employee/AdvanceStatusTracker'
+import { TripStatusTracker } from '@/components/employee/TripStatusTracker'
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { variant: any; icon: any; label: string }> = {
@@ -584,6 +1137,7 @@ export default function TripDetail() {
       setIsLoading(true)
       
       const tripResponse = await tripAPI.getById(Number(id))
+      console.log('Trip Response:', tripResponse.data.data) // ✅ DEBUG: Cek apakah ada history
       setTrip(tripResponse.data.data)
 
       const advancesResponse = await advanceAPI.getAll({ trip_id: id })
@@ -608,11 +1162,19 @@ export default function TripDetail() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date')
+      }
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    } catch (error) {
+      return 'Invalid Date'
+    }
   }
 
   const handleCancelTrip = async () => {
@@ -620,6 +1182,11 @@ export default function TripDetail() {
 
     try {
       await tripAPI.cancel(Number(id))
+
+      for (const advance of advances) {
+        await advanceAPI.remove(advance.advance_id) // Replace 'remove' with the correct method name if different
+      }
+
       alert('Trip cancelled successfully')
       navigate('/employee/dashboard')
     } catch (error) {
@@ -666,14 +1233,9 @@ export default function TripDetail() {
     )
   }
 
-  // GANTI perhitungan lama:
-  // const totalAdvance = advances
-  //   .filter(a => a.status === 'transferred')
-  //   .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
-
   const requestedAdvanceTotal = advances
     .filter(a => a.status !== 'rejected')
-    .reduce((sum, a) => sum + (a.requested_amount || 0), 0)
+    .reduce((sum, a) => sum + (typeof a.requested_amount === 'number' ? a.requested_amount : 0), 0)
 
   const approvedAdvanceTotal = advances
     .filter(a => ['approved_area','approved_regional','transferred'].includes(a.status))
@@ -685,7 +1247,6 @@ export default function TripDetail() {
 
   const totalReceipts = receipts.reduce((sum, r) => sum + r.amount, 0)
   const balance = transferredAdvanceTotal - totalReceipts
-
   const estimatedBudget = trip.estimated_budget || 0
 
   return (
@@ -908,6 +1469,22 @@ export default function TripDetail() {
                       </div>
                     </div>
 
+                    {/* Advance Status Tracker */}
+                    <div>
+                      <h4 className="font-semibold mb-3">Advance Status Tracker</h4>
+                      <AdvanceStatusTracker advances={advances} />
+                    </div>
+
+                  {/* Trip Status Tracker - ✅ DENGAN FALLBACK */}
+<div>
+  <h4 className="font-semibold mb-3">Trip Status Tracker</h4>
+  {/* ✅ TAMBAH FALLBACK [] */}
+  <TripStatusTracker 
+    currentStatus={trip.status} 
+    history={trip.history || []} // Fallback to an empty array if history is undefined
+  />
+</div>
+
                     <Card className="bg-primary/5 border-primary/20">
                       <CardHeader>
                         <CardTitle className="text-base">Quick Stats</CardTitle>
@@ -1028,7 +1605,9 @@ export default function TripDetail() {
                               )}
                             </div>
 
-                            <p className="text-xs text-muted-foreground mt-2">{receipt.description}</p>
+                            {receipt.description && (
+                              <p className="text-xs text-muted-foreground mt-2">{receipt.description}</p>
+                            )}
                           </CardContent>
                         </Card>
                       ))

@@ -86,6 +86,8 @@ export const advanceAPI = {
     api.post(`/advances/${id}/transfer`, data),
   reject: (id: number, data: any) => 
     api.post(`/advances/${id}/reject`, data),
+  remove: (id: number) => 
+    api.delete(`/advances/${id}`), // Tambahkan metode ini
 };
 
 // Receipt endpoints
@@ -156,4 +158,6 @@ export const notificationAPI = {
     api.get('/notifications/unread-count'),
 };
 
+
+// Removed duplicate declaration of tripAPI
 export default api;
