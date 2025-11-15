@@ -666,12 +666,27 @@ export default function TripDetail() {
     )
   }
 
-  const totalAdvance = advances
+  // GANTI perhitungan lama:
+  // const totalAdvance = advances
+  //   .filter(a => a.status === 'transferred')
+  //   .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
+
+  const requestedAdvanceTotal = advances
+    .filter(a => a.status !== 'rejected')
+    .reduce((sum, a) => sum + (a.requested_amount || 0), 0)
+
+  const approvedAdvanceTotal = advances
+    .filter(a => ['approved_area','approved_regional','transferred'].includes(a.status))
+    .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
+
+  const transferredAdvanceTotal = advances
     .filter(a => a.status === 'transferred')
     .reduce((sum, a) => sum + (a.approved_amount || 0), 0)
 
   const totalReceipts = receipts.reduce((sum, r) => sum + r.amount, 0)
-  const balance = totalAdvance - totalReceipts
+  const balance = transferredAdvanceTotal - totalReceipts
+
+  const estimatedBudget = trip.estimated_budget || 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -751,28 +766,41 @@ export default function TripDetail() {
                   <DollarSign className="h-5 w-5" />
                   Financial Summary
                 </CardTitle>
+                <CardDescription>Overview of budget, advances, and expenses</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Total Advance</span>
-                  <span className="text-sm font-semibold text-primary">{formatCurrency(totalAdvance)}</span>
+                  <span className="text-sm text-muted-foreground">Estimated Budget</span>
+                  <span className="text-sm font-semibold">{formatCurrency(estimatedBudget)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Requested Advance Total</span>
+                  <span className="text-sm font-semibold text-warning">{formatCurrency(requestedAdvanceTotal)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Approved Advance Total</span>
+                  <span className="text-sm font-semibold text-primary">{formatCurrency(approvedAdvanceTotal)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Transferred Advance Total</span>
+                  <span className="text-sm font-semibold text-success">{formatCurrency(transferredAdvanceTotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Total Expenses</span>
                   <span className="text-sm font-semibold text-success">{formatCurrency(totalReceipts)}</span>
                 </div>
                 <div className="pt-3 border-t flex justify-between items-center">
-                  <span className="text-sm font-semibold">Balance</span>
+                  <span className="text-sm font-semibold">Balance (Transferred - Expenses)</span>
                   <span className={`text-sm font-bold ${balance > 0 ? 'text-warning' : balance < 0 ? 'text-purple-600' : 'text-muted-foreground'}`}>
                     {formatCurrency(balance)}
                   </span>
                 </div>
-                {balance > 0 && (
-                  <p className="text-xs text-warning">You need to refund {formatCurrency(balance)}</p>
-                )}
-                {balance < 0 && (
-                  <p className="text-xs text-purple-600">Company owes you {formatCurrency(Math.abs(balance))}</p>
-                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Remaining Budget (Est - Expenses)</span>
+                  <span className="text-sm font-semibold">
+                    {formatCurrency(Math.max(estimatedBudget - totalReceipts, 0))}
+                  </span>
+                </div>
               </CardContent>
             </Card>
 
