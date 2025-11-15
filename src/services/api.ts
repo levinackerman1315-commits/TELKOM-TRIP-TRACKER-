@@ -68,6 +68,7 @@ export const tripAPI = {
     api.post(`/trips/${id}/submit`),
   cancel: (id: number, data?: any) => 
     api.post(`/trips/${id}/cancel`, data),
+  getAdvances: (tripId: number) => api.get(`/trips/${tripId}/advances`),
 };
 
 // Advance endpoints
