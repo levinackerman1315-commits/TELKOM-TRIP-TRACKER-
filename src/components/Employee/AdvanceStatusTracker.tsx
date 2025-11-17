@@ -495,7 +495,7 @@
 
 
 // src/components/employee/AdvanceStatusTracker.tsx
-
+//stabil
 import { CheckCircle2, Circle, XCircle } from 'lucide-react';
 
 interface Advance {

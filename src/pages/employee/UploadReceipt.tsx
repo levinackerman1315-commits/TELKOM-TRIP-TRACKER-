@@ -178,17 +178,17 @@ export default function NewReceipt() {
 
     try {
       const formDataToSend = new FormData()
-      formDataToSend.append('trip_id', tripId!)
-      formDataToSend.append('category', formData.category)
-      formDataToSend.append('amount', formData.amount)
-      formDataToSend.append('merchant_name', formData.merchant_name)
-      formDataToSend.append('receipt_date', formData.receipt_date)
-      formDataToSend.append('description', formData.description)
-      if (selectedFile) {
-        formDataToSend.append('receipt_image', selectedFile)
+         formDataToSend.append('trip_id', tripId!)
+    formDataToSend.append('category', formData.category)
+    formDataToSend.append('amount', formData.amount)
+    formDataToSend.append('merchant_name', formData.merchant_name)
+    formDataToSend.append('receipt_date', formData.receipt_date)
+    formDataToSend.append('description', formData.description)
+         if (selectedFile) {
+      formDataToSend.append('file', selectedFile)
       }
 
-      await receiptAPI.upload(formDataToSend)
+      await receiptAPI.create(formDataToSend)
       
       setSuccessMessage('Receipt uploaded successfully!')
       
