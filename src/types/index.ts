@@ -420,6 +420,7 @@ export type TripStatus =
   | 'extension_requested'   // Request tambahan hari
   | 'awaiting_review'       // Menunggu review setelah pulang
   | 'under_review_area'     // Sedang direview Finance Area
+  | 'under_review_regional'     // Sedang direview Finance Area
   | 'approved_area'         // Disetujui Finance Area
   | 'approved_regional'     // Disetujui Finance Regional
   | 'completed'             // Selesai
