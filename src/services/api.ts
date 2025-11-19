@@ -916,4 +916,22 @@ export const notificationAPI = {
     api.get('/notifications/unread-count'),
 };
 
+
+// ═══════════════════════════════════════════════════════════
+// USER API (HR Management)
+// ═══════════════════════════════════════════════════════════
+export const userAPI = {
+  // List & Statistics
+  getAll: (params?: any) => api.get('/users', { params }),
+  getStatistics: () => api.get('/users/statistics'),
+  
+  // CRUD operations
+  getById: (id: number) => api.get(`/users/${id}`),
+  create: (data: any) => api.post('/users', data),
+  update: (id: number, data: any) => api.put(`/users/${id}`, data),
+  delete: (id: number) => api.delete(`/users/${id}`),
+  
+  // User actions
+  activate: (id: number) => api.post(`/users/${id}/activate`),
+};
 export default api;
