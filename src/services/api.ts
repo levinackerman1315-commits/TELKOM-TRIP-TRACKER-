@@ -593,6 +593,8 @@ export const tripAPI = {
   update: (id: number, data: any) => 
     api.put(`/trips/${id}`, data),
   
+
+  
   // Employee - Actions
   requestExtension: (id: number, data: any) => 
     api.post(`/trips/${id}/extension`, data),
@@ -617,6 +619,12 @@ export const tripAPI = {
   // ✅ Finance Regional - Final Approval (TAMBAHAN BARU!)
   approveByRegional: (id: number, data?: { notes?: string }) =>
     api.post(`/trips/${id}/approve-settlement-regional`, data),
+    // ✅ NEW: DELETE method
+  delete: (id: number) => api.delete(`/trips/${id}`),
+    cancelExtension: async (id: number) => {
+    const response = await api.post(`/trips/${id}/cancel-extension`);
+    return response.data;
+  },
 };
 
 // ═══════════════════════════════════════════════════════════
