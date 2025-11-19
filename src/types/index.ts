@@ -783,6 +783,8 @@ export interface Advance {
   status_history?: AdvanceStatusHistory[];
 }
 
+
+
 // ======================
 // RECEIPT/BON INTERFACE
 // ======================
