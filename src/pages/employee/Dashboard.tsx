@@ -2783,6 +2783,914 @@
 // export default EmployeeDashboard
 
 
+// // src/pages/employee/Dashboard.tsx
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { Badge } from "@/components/ui/badge"
+// import { 
+//   PlusCircle, 
+//   Plane, 
+//   Clock,
+//   CheckCircle2,
+//   XCircle,
+//   AlertCircle,
+//   Bell,
+//   TrendingUp
+// } from "lucide-react"
+// import { useNavigate, Link } from "react-router-dom"
+// import { useAuth } from '@/contexts/AuthContext'
+// import { useState, useEffect } from 'react'
+// import { tripAPI, advanceAPI, notificationAPI } from '@/services/api'
+// import { Trip, DashboardStats } from '@/types'
+
+// const getStatusBadge = (status: string) => {
+//   switch (status) {
+//     case "active":
+//       return <Badge className="bg-blue-500 text-white"><Clock className="w-3 h-3 mr-1" />Active</Badge>
+//     case "awaiting_review":
+//       return <Badge className="bg-yellow-500 text-white"><AlertCircle className="w-3 h-3 mr-1" />Awaiting Review</Badge>
+//     case "under_review_area":
+//       return <Badge className="bg-orange-500 text-white"><Clock className="w-3 h-3 mr-1" />Under Review (Area)</Badge>
+//     case "approved_area":
+//       return <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Approved (Area)</Badge>
+//     case "under_review_regional":
+//       return <Badge className="bg-orange-500 text-white"><Clock className="w-3 h-3 mr-1" />Under Review (Regional)</Badge>
+//     case "approved_regional":
+//       return <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Approved (Regional)</Badge>
+//     case "completed":
+//       return <Badge className="bg-emerald-600 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Completed</Badge>
+//     case "rejected":
+//       return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
+//     case "cancelled":
+//       return <Badge variant="outline" className="text-gray-500"><XCircle className="w-3 h-3 mr-1" />Cancelled</Badge>
+//     default:
+//       return <Badge variant="outline">{status}</Badge>
+//   }
+// }
+
+// const EmployeeDashboard = () => {
+//   const navigate = useNavigate()
+//   const { user, logout } = useAuth()
+
+//   const [activeTrip, setActiveTrip] = useState<Trip | null>(null)
+//   const [stats, setStats] = useState<DashboardStats>({
+//     total_trips: 0,
+//     active_trips: 0,
+//     completed_trips: 0,
+//     pending_advances: 0,
+//     total_advance_amount: 0,
+//     total_expense_amount: 0
+//   })
+//   const [unreadNotifications, setUnreadNotifications] = useState(0)
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   useEffect(() => {
+//     fetchDashboardData()
+//   }, [])
+
+//   const fetchDashboardData = async () => {
+//     try {
+//       setIsLoading(true)
+      
+//       // Fetch trips
+//       const tripsResponse = await tripAPI.getAll()
+//       const trips = tripsResponse.data.data || []
+      
+//       // Find active trip (status: active atau awaiting_review)
+//       const active = trips.find((t: Trip) => 
+//         t.status === 'active' || t.status === 'awaiting_review'
+//       )
+//       setActiveTrip(active || null)
+      
+//       // Calculate stats
+//       const completed = trips.filter((t: Trip) => t.status === 'completed').length
+      
+//       // Fetch advances
+//       const advancesResponse = await advanceAPI.getAll()
+//       const advances = advancesResponse.data.data || []
+//       const pending = advances.filter((a: any) => a.status === 'pending').length
+      
+//       // ✅ APPROVED ADVANCE: Yang sudah approved (uang akan ditransfer via bank)
+//       const approvedAdvance = advances
+//         .filter((a: any) => ['approved_area', 'approved_regional', 'completed'].includes(a.status))
+//         .reduce((sum: number, a: any) => sum + (a.approved_amount || 0), 0)
+      
+//       // Fetch notifications
+//       try {
+//         const notifResponse = await notificationAPI.getUnreadCount()
+//         setUnreadNotifications(notifResponse.data.unread_count || 0)
+//       } catch (error) {
+//         console.log('Notifications not available')
+//       }
+      
+//       setStats({
+//         total_trips: trips.length,
+//         active_trips: active ? 1 : 0,
+//         completed_trips: completed,
+//         pending_advances: pending,
+//         total_advance_amount: approvedAdvance,
+//         total_expense_amount: active?.total_expenses || 0
+//       })
+      
+//     } catch (error) {
+//       console.error('Failed to fetch dashboard data:', error)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }
+
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('id-ID', {
+//       style: 'currency',
+//       currency: 'IDR',
+//       minimumFractionDigits: 0
+//     }).format(amount)
+//   }
+
+//   const formatDate = (dateString: string) => {
+//     return new Date(dateString).toLocaleDateString('id-ID', {
+//       day: 'numeric',
+//       month: 'long',
+//       year: 'numeric'
+//     })
+//   }
+
+//   const isTripStarted = (trip: Trip) => {
+//     const today = new Date()
+//     const startDate = new Date(trip.start_date)
+//     return today >= startDate
+//   }
+
+//   const isTripEnded = (trip: Trip) => {
+//     const today = new Date()
+//     const endDate = new Date(trip.end_date)
+//     return today > endDate
+//   }
+
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background">
+//       {/* Header */}
+//       <header className="bg-gradient-primary border-b shadow-soft">
+//         <div className="container mx-auto px-4 py-4">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <img 
+//                 src="/logo-telkom-akses.png" 
+//                 alt="Telkom Akses" 
+//                 className="h-10 w-auto bg-white rounded px-2 py-1"
+//                 onError={(e) => { e.currentTarget.style.display = 'none' }}
+//               />
+//               <div>
+//                 <h1 className="text-xl font-bold text-white">Employee Portal</h1>
+//                 <p className="text-sm text-white/80">Welcome back, {user?.name}!</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-3">
+//               <Link to="/employee/notifications" className="relative">
+//                 <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+//                   <Bell className="w-5 h-5" />
+//                 </Button>
+//                 {unreadNotifications > 0 && (
+//                   <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-destructive rounded-full">
+//                     {unreadNotifications}
+//                   </span>
+//                 )}
+//               </Link>
+//               <Button variant="secondary" size="sm" onClick={logout}>
+//                 Logout
+//               </Button>
+//             </div>
+//           </div>
+//         </div>
+//       </header>
+
+//       <div className="container mx-auto px-4 py-8">
+//         {/* Stats Cards */}
+//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <Plane className="w-4 h-4 mr-2" />
+//                 Total Trips
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold">{stats.total_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">All time</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <Clock className="w-4 h-4 mr-2" />
+//                 Active Trip
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-blue-600">{stats.active_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Ongoing</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <CheckCircle2 className="w-4 h-4 mr-2" />
+//                 Completed
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-green-600">{stats.completed_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Successfully done</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <AlertCircle className="w-4 h-4 mr-2" />
+//                 Pending Advances
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-yellow-600">{stats.pending_advances}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* Active Trip Card */}
+//         {activeTrip ? (
+//           <Card className="mb-8 shadow-soft bg-gradient-to-r from-primary/90 to-primary text-primary-foreground">
+//             <CardContent className="p-6">
+//               <div className="flex items-start justify-between">
+//                 <div className="flex-1">
+//                   <div className="flex items-center gap-2 mb-2">
+//                     {getStatusBadge(activeTrip.status)}
+//                     <span className="text-sm opacity-90">{activeTrip.trip_number}</span>
+//                   </div>
+//                   <h2 className="text-2xl font-bold mb-2">{activeTrip.destination}</h2>
+//                   <p className="opacity-90 mb-4">{activeTrip.purpose}</p>
+                  
+//                   {isTripStarted(activeTrip) && !isTripEnded(activeTrip) && (
+//                     <div className="bg-white/10 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <TrendingUp className="w-5 h-5" />
+//                         <span className="font-semibold">Trip is in progress</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         You can upload receipts until the trip ends
+//                       </p>
+//                     </div>
+//                   )}
+
+//                   {isTripEnded(activeTrip) && activeTrip.status === 'active' && (
+//                     <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <AlertCircle className="w-5 h-5" />
+//                         <span className="font-semibold">Trip has ended</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         Please submit for review to complete settlement
+//                       </p>
+//                     </div>
+//                   )}
+
+//                   {activeTrip.status === 'awaiting_review' && (
+//                     <div className="bg-white/10 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <Clock className="w-5 h-5" />
+//                         <span className="font-semibold">Under Review</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         Your trip settlement is being reviewed by Finance Area
+//                       </p>
+//                     </div>
+//                   )}
+                  
+//                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+//                     <div>
+//                       <p className="text-sm opacity-75">Duration</p>
+//                       <p className="font-semibold">{activeTrip.duration} days</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Start Date</p>
+//                       <p className="font-semibold">{formatDate(activeTrip.start_date)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">End Date</p>
+//                       <p className="font-semibold">{formatDate(activeTrip.end_date)}</p>
+//                     </div>
+//                   </div>
+
+//                   <div className="flex gap-4 pt-4 border-t border-white/20">
+//                     <div>
+//                       <p className="text-sm opacity-75">Total Advance</p>
+//                       <p className="text-lg font-bold">{formatCurrency(activeTrip.total_advance || 0)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Total Expenses</p>
+//                       <p className="text-lg font-bold">{formatCurrency(activeTrip.total_expenses || 0)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Balance</p>
+//                       <p className={`text-lg font-bold ${
+//                         (activeTrip.total_advance || 0) - (activeTrip.total_expenses || 0) >= 0
+//                           ? 'text-white'
+//                           : 'text-red-300'
+//                       }`}>
+//                         {formatCurrency((activeTrip.total_advance || 0) - (activeTrip.total_expenses || 0))}
+//                       </p>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <Button 
+//                   variant="secondary"
+//                   onClick={() => navigate(`/employee/trips/${activeTrip.trip_id}`)}
+//                   className="ml-4"
+//                 >
+//                   View Details →
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         ) : (
+//           <Card className="mb-8 shadow-soft">
+//             <CardContent className="p-8 text-center">
+//               <div className="max-w-md mx-auto">
+//                 <Plane className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+//                 <h3 className="text-lg font-semibold mb-2">No Active Trip</h3>
+//                 <p className="text-muted-foreground mb-6">You don't have any active business trip at the moment.</p>
+//                 <Button 
+//                   onClick={() => navigate("/employee/trips/new")}
+//                   size="lg"
+//                 >
+//                   <PlusCircle className="w-5 h-5 mr-2" />
+//                   Create New Trip
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         )}
+
+//         {/* Quick Actions */}
+//         <Card className="mb-8 shadow-soft">
+//           <CardHeader>
+//             <CardTitle>Quick Actions</CardTitle>
+//             <CardDescription>Manage your business trips and expenses</CardDescription>
+//           </CardHeader>
+//           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//             <Button 
+//               onClick={() => navigate("/employee/trips/new")}
+//               className="h-auto py-6 flex-col gap-2"
+//               disabled={!!activeTrip}
+//             >
+//               <PlusCircle className="w-6 h-6" />
+//               <span>New Trip Request</span>
+//               {activeTrip && <span className="text-xs opacity-75">Complete active trip first</span>}
+//             </Button>
+
+//             <Button 
+//               variant="outline"
+//               onClick={() => navigate("/employee/trips")}
+//               className="h-auto py-6 flex-col gap-2"
+//             >
+//               <Plane className="w-6 h-6" />
+//               <span>My Trips</span>
+//             </Button>
+
+//             <Button 
+//               variant="outline"
+//               onClick={() => navigate("/employee/history")}
+//               className="h-auto py-6 flex-col gap-2"
+//             >
+//               <Clock className="w-6 h-6" />
+//               <span>Trip History</span>
+//             </Button>
+//           </CardContent>
+//         </Card>
+
+//         {/* ✅ Financial Summary - APPROVED ADVANCE */}
+//         {stats.total_advance_amount > 0 && (
+//           <Card className="shadow-soft">
+//             <CardHeader>
+//               <CardTitle className="flex items-center">
+//                 <TrendingUp className="w-5 h-5 mr-2" />
+//                 Financial Summary
+//               </CardTitle>
+//               <CardDescription>Overview of your approved advances and expenses</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Approved Advance</p>
+//                   <p className="text-2xl font-bold text-green-600">
+//                     {formatCurrency(stats.total_advance_amount)}
+//                   </p>
+//                   <p className="text-xs text-muted-foreground mt-1">
+//                     Finance will transfer to your account
+//                   </p>
+//                 </div>
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Total Expenses</p>
+//                   <p className="text-2xl font-bold text-blue-600">
+//                     {formatCurrency(stats.total_expense_amount)}
+//                   </p>
+//                 </div>
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Balance</p>
+//                   <p className={`text-2xl font-bold ${
+//                     stats.total_advance_amount - stats.total_expense_amount >= 0
+//                       ? 'text-green-600'
+//                       : 'text-red-600'
+//                   }`}>
+//                     {formatCurrency(stats.total_advance_amount - stats.total_expense_amount)}
+//                   </p>
+//                 </div>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default EmployeeDashboard
+
+
+
+// // src/pages/employee/Dashboard.tsx
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { Badge } from "@/components/ui/badge"
+// import { 
+//   PlusCircle, 
+//   Plane, 
+//   Clock,
+//   CheckCircle2,
+//   XCircle,
+//   AlertCircle,
+//   Bell,
+//   TrendingUp
+// } from "lucide-react"
+// import { useNavigate, Link } from "react-router-dom"
+// import { useAuth } from '@/contexts/AuthContext'
+// import { useState, useEffect } from 'react'
+// import { tripAPI, advanceAPI, notificationAPI } from '@/services/api'
+// import { Trip, DashboardStats } from '@/types'
+
+// const getStatusBadge = (status: string) => {
+//   switch (status) {
+//     case "active":
+//       return <Badge className="bg-blue-500 text-white"><Clock className="w-3 h-3 mr-1" />Active</Badge>
+//     case "awaiting_review":
+//       return <Badge className="bg-yellow-500 text-white"><AlertCircle className="w-3 h-3 mr-1" />Awaiting Review</Badge>
+//     case "under_review_area":
+//       return <Badge className="bg-orange-500 text-white"><Clock className="w-3 h-3 mr-1" />Under Review (Area)</Badge>
+//     case "approved_area":
+//       return <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Approved (Area)</Badge>
+//     case "under_review_regional":
+//       return <Badge className="bg-orange-500 text-white"><Clock className="w-3 h-3 mr-1" />Under Review (Regional)</Badge>
+//     case "approved_regional":
+//       return <Badge className="bg-green-500 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Approved (Regional)</Badge>
+//     case "completed":
+//       return <Badge className="bg-emerald-600 text-white"><CheckCircle2 className="w-3 h-3 mr-1" />Completed</Badge>
+//     case "rejected":
+//       return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
+//     case "cancelled":
+//       return <Badge variant="outline" className="text-gray-500"><XCircle className="w-3 h-3 mr-1" />Cancelled</Badge>
+//     default:
+//       return <Badge variant="outline">{status}</Badge>
+//   }
+// }
+
+// const EmployeeDashboard = () => {
+//   const navigate = useNavigate()
+//   const { user, logout } = useAuth()
+
+//   const [activeTrip, setActiveTrip] = useState<Trip | null>(null)
+//   const [stats, setStats] = useState<DashboardStats>({
+//     total_trips: 0,
+//     active_trips: 0,
+//     completed_trips: 0,
+//     pending_advances: 0,
+//     total_advance_amount: 0,
+//     total_expense_amount: 0
+//   })
+//   const [unreadNotifications, setUnreadNotifications] = useState(0)
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   useEffect(() => {
+//     fetchDashboardData()
+//   }, [])
+
+//   const fetchDashboardData = async () => {
+//     try {
+//       setIsLoading(true)
+      
+//       // Fetch trips
+//       const tripsResponse = await tripAPI.getAll()
+//       const trips = tripsResponse.data.data || []
+      
+//       // Find active trip (status: active atau awaiting_review)
+//       const active = trips.find((t: Trip) => 
+//         t.status === 'active' || t.status === 'awaiting_review'
+//       )
+//       setActiveTrip(active || null)
+      
+//       // Calculate stats
+//       const completed = trips.filter((t: Trip) => t.status === 'completed').length
+      
+//       // Fetch advances
+//       const advancesResponse = await advanceAPI.getAll()
+//       const advances = advancesResponse.data.data || []
+//       const pending = advances.filter((a: any) => a.status === 'pending').length
+      
+//       // ✅ APPROVED ADVANCE: Yang sudah approved (uang akan ditransfer via bank)
+//       const approvedAdvance = advances
+//         .filter((a: any) => ['approved_area', 'approved_regional', 'completed'].includes(a.status))
+//         .reduce((sum: number, a: any) => sum + (a.approved_amount || 0), 0)
+      
+//       // Fetch notifications
+//       try {
+//         const notifResponse = await notificationAPI.getUnreadCount()
+//         setUnreadNotifications(notifResponse.data.unread_count || 0)
+//       } catch (error) {
+//         console.log('Notifications not available')
+//       }
+      
+//       setStats({
+//         total_trips: trips.length,
+//         active_trips: active ? 1 : 0,
+//         completed_trips: completed,
+//         pending_advances: pending,
+//         total_advance_amount: approvedAdvance,
+//         total_expense_amount: active?.total_expenses || 0
+//       })
+      
+//     } catch (error) {
+//       console.error('Failed to fetch dashboard data:', error)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }
+
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('id-ID', {
+//       style: 'currency',
+//       currency: 'IDR',
+//       minimumFractionDigits: 0
+//     }).format(amount)
+//   }
+
+//   const formatDate = (dateString: string) => {
+//     return new Date(dateString).toLocaleDateString('id-ID', {
+//       day: 'numeric',
+//       month: 'long',
+//       year: 'numeric'
+//     })
+//   }
+
+//   const isTripStarted = (trip: Trip) => {
+//     const today = new Date()
+//     const startDate = new Date(trip.start_date)
+//     return today >= startDate
+//   }
+
+//   const isTripEnded = (trip: Trip) => {
+//     const today = new Date()
+//     const endDate = new Date(trip.end_date)
+//     return today > endDate
+//   }
+
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background">
+//       {/* Header */}
+//       <header className="bg-gradient-primary border-b shadow-soft">
+//         <div className="container mx-auto px-4 py-4">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <img 
+//                 src="/logo-telkom-akses.png" 
+//                 alt="Telkom Akses" 
+//                 className="h-10 w-auto bg-white rounded px-2 py-1"
+//                 onError={(e) => { e.currentTarget.style.display = 'none' }}
+//               />
+//               <div>
+//                 <h1 className="text-xl font-bold text-white">Employee Portal</h1>
+//                 <p className="text-sm text-white/80">Welcome back, {user?.name}!</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-3">
+//               <Link to="/employee/notifications" className="relative">
+//                 <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+//                   <Bell className="w-5 h-5" />
+//                 </Button>
+//                 {unreadNotifications > 0 && (
+//                   <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-destructive rounded-full">
+//                     {unreadNotifications}
+//                   </span>
+//                 )}
+//               </Link>
+//               <Button variant="secondary" size="sm" onClick={logout}>
+//                 Logout
+//               </Button>
+//             </div>
+//           </div>
+//         </div>
+//       </header>
+
+//       <div className="container mx-auto px-4 py-8">
+//         {/* Stats Cards */}
+//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <Plane className="w-4 h-4 mr-2" />
+//                 Total Trips
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold">{stats.total_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">All time</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <Clock className="w-4 h-4 mr-2" />
+//                 Active Trip
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-blue-600">{stats.active_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Ongoing</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <CheckCircle2 className="w-4 h-4 mr-2" />
+//                 Completed
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-green-600">{stats.completed_trips}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Successfully done</p>
+//             </CardContent>
+//           </Card>
+
+//           <Card className="hover:shadow-lg transition-shadow">
+//             <CardHeader className="pb-3">
+//               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+//                 <AlertCircle className="w-4 h-4 mr-2" />
+//                 Pending Advances
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="text-2xl font-bold text-yellow-600">{stats.pending_advances}</div>
+//               <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* Active Trip Card */}
+//         {activeTrip ? (
+//           <Card className="mb-8 shadow-soft bg-gradient-to-r from-primary/90 to-primary text-primary-foreground">
+//             <CardContent className="p-6">
+//               <div className="flex items-start justify-between">
+//                 <div className="flex-1">
+//                   <div className="flex items-center gap-2 mb-2">
+//                     {getStatusBadge(activeTrip.status)}
+//                     <span className="text-sm opacity-90">{activeTrip.trip_number}</span>
+//                   </div>
+//                   <h2 className="text-2xl font-bold mb-2">{activeTrip.destination}</h2>
+//                   <p className="opacity-90 mb-4">{activeTrip.purpose}</p>
+                  
+//                   {isTripStarted(activeTrip) && !isTripEnded(activeTrip) && (
+//                     <div className="bg-white/10 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <TrendingUp className="w-5 h-5" />
+//                         <span className="font-semibold">Trip is in progress</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         You can upload receipts until the trip ends
+//                       </p>
+//                     </div>
+//                   )}
+
+//                   {isTripEnded(activeTrip) && activeTrip.status === 'active' && (
+//                     <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <AlertCircle className="w-5 h-5" />
+//                         <span className="font-semibold">Trip has ended</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         Please submit for review to complete settlement
+//                       </p>
+//                     </div>
+//                   )}
+
+//                   {activeTrip.status === 'awaiting_review' && (
+//                     <div className="bg-white/10 rounded-lg p-3 mb-4">
+//                       <div className="flex items-center gap-2">
+//                         <Clock className="w-5 h-5" />
+//                         <span className="font-semibold">Under Review</span>
+//                       </div>
+//                       <p className="text-sm opacity-90 mt-1">
+//                         Your trip settlement is being reviewed by Finance Area
+//                       </p>
+//                     </div>
+//                   )}
+                  
+//                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+//                     <div>
+//                       <p className="text-sm opacity-75">Duration</p>
+//                       <p className="font-semibold">{activeTrip.duration} days</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Start Date</p>
+//                       <p className="font-semibold">{formatDate(activeTrip.start_date)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">End Date</p>
+//                       <p className="font-semibold">{formatDate(activeTrip.end_date)}</p>
+//                     </div>
+//                   </div>
+
+//                   <div className="flex gap-4 pt-4 border-t border-white/20">
+//                     <div>
+//                       <p className="text-sm opacity-75">Total Advance</p>
+//                       <p className="text-lg font-bold">{formatCurrency(activeTrip.total_advance || 0)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Total Expenses</p>
+//                       <p className="text-lg font-bold">{formatCurrency(activeTrip.total_expenses || 0)}</p>
+//                     </div>
+//                     <div>
+//                       <p className="text-sm opacity-75">Balance</p>
+//                       <p className={`text-lg font-bold ${
+//                         (activeTrip.total_advance || 0) - (activeTrip.total_expenses || 0) >= 0
+//                           ? 'text-white'
+//                           : 'text-red-300'
+//                       }`}>
+//                         {formatCurrency((activeTrip.total_advance || 0) - (activeTrip.total_expenses || 0))}
+//                       </p>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <Button 
+//                   variant="secondary"
+//                   onClick={() => navigate(`/employee/trips/${activeTrip.trip_id}`)}
+//                   className="ml-4"
+//                 >
+//                   View Details →
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         ) : (
+//           <Card className="mb-8 shadow-soft">
+//             <CardContent className="p-8 text-center">
+//               <div className="max-w-md mx-auto">
+//                 <Plane className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+//                 <h3 className="text-lg font-semibold mb-2">No Active Trip</h3>
+//                 <p className="text-muted-foreground mb-6">You don't have any active business trip at the moment.</p>
+//                 <Button 
+//                   onClick={() => navigate("/employee/trips/new")}
+//                   size="lg"
+//                 >
+//                   <PlusCircle className="w-5 h-5 mr-2" />
+//                   Create New Trip
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         )}
+
+//         {/* Quick Actions */}
+//         <Card className="mb-8 shadow-soft">
+//           <CardHeader>
+//             <CardTitle>Quick Actions</CardTitle>
+//             <CardDescription>Manage your business trips and expenses</CardDescription>
+//           </CardHeader>
+//           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//             <Button 
+//               onClick={() => navigate("/employee/trips/new")}
+//               className="h-auto py-6 flex-col gap-2"
+//               disabled={!!activeTrip}
+//             >
+//               <PlusCircle className="w-6 h-6" />
+//               <span>New Trip Request</span>
+//               {activeTrip && <span className="text-xs opacity-75">Complete active trip first</span>}
+//             </Button>
+
+//             <Button 
+//               variant="outline"
+//               onClick={() => navigate("/employee/trips")}
+//               className="h-auto py-6 flex-col gap-2"
+//             >
+//               <Plane className="w-6 h-6" />
+//               <span>My Trips</span>
+//             </Button>
+
+//             <Button 
+//               variant="outline"
+//               onClick={() => navigate("/employee/history")}
+//               className="h-auto py-6 flex-col gap-2"
+//             >
+//               <Clock className="w-6 h-6" />
+//               <span>Trip History</span>
+//             </Button>
+//           </CardContent>
+//         </Card>
+
+//         {/* ✅ FIXED: Financial Summary - SELALU TAMPIL! */}
+//         <Card className="shadow-soft">
+//           <CardHeader>
+//             <CardTitle className="flex items-center">
+//               <TrendingUp className="w-5 h-5 mr-2" />
+//               Financial Summary
+//             </CardTitle>
+//             <CardDescription>Overview of your approved advances and expenses</CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             {stats.total_advance_amount > 0 ? (
+//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Approved Advance</p>
+//                   <p className="text-2xl font-bold text-green-600">
+//                     {formatCurrency(stats.total_advance_amount)}
+//                   </p>
+//                   <p className="text-xs text-muted-foreground mt-1">
+//                     Finance will transfer to your account
+//                   </p>
+//                 </div>
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Total Expenses</p>
+//                   <p className="text-2xl font-bold text-blue-600">
+//                     {formatCurrency(stats.total_expense_amount)}
+//                   </p>
+//                 </div>
+//                 <div>
+//                   <p className="text-sm text-muted-foreground mb-1">Balance</p>
+//                   <p className={`text-2xl font-bold ${
+//                     stats.total_advance_amount - stats.total_expense_amount >= 0
+//                       ? 'text-green-600'
+//                       : 'text-red-600'
+//                   }`}>
+//                     {formatCurrency(stats.total_advance_amount - stats.total_expense_amount)}
+//                   </p>
+//                 </div>
+//               </div>
+//             ) : (
+//               <div className="text-center py-8">
+//                 <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+//                 <h3 className="text-lg font-semibold mb-2">No Approved Advances Yet</h3>
+//                 <p className="text-muted-foreground">
+//                   Your advance requests will appear here once they are approved by Finance.
+//                 </p>
+//               </div>
+//             )}
+//           </CardContent>
+//         </Card>
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default EmployeeDashboard
+
+
+
 // src/pages/employee/Dashboard.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -2800,7 +3708,7 @@ import {
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect } from 'react'
-import { tripAPI, advanceAPI, notificationAPI } from '@/services/api'
+import { tripAPI, notificationAPI } from '@/services/api'
 import { Trip, DashboardStats } from '@/types'
 
 const getStatusBadge = (status: string) => {
@@ -2865,15 +3773,34 @@ const EmployeeDashboard = () => {
       // Calculate stats
       const completed = trips.filter((t: Trip) => t.status === 'completed').length
       
-      // Fetch advances
-      const advancesResponse = await advanceAPI.getAll()
-      const advances = advancesResponse.data.data || []
-      const pending = advances.filter((a: any) => a.status === 'pending').length
+      // ✅ FIX: Fetch advances ONLY for active trip (if exists)
+      let approvedAdvance = 0
+      let pending = 0
       
-      // ✅ APPROVED ADVANCE: Yang sudah approved (uang akan ditransfer via bank)
-      const approvedAdvance = advances
-        .filter((a: any) => ['approved_area', 'approved_regional', 'completed'].includes(a.status))
-        .reduce((sum: number, a: any) => sum + (a.approved_amount || 0), 0)
+      if (active) {
+        try {
+          // ✅ Fetch advances for the active trip specifically
+          const advancesResponse = await tripAPI.getAdvances(active.trip_id)
+          const advances = advancesResponse.data.data || []
+          
+          console.log('📊 Fetched advances for active trip:', advances)
+          
+          // Count pending advances
+          pending = advances.filter((a: any) => a.status === 'pending').length
+          
+          // ✅ APPROVED ADVANCE: Yang sudah approved (uang akan ditransfer via bank)
+          approvedAdvance = advances
+            .filter((a: any) => ['approved_area', 'approved_regional', 'completed'].includes(a.status))
+            .reduce((sum: number, a: any) => sum + (Number(a.approved_amount) || 0), 0)
+          
+          console.log('✅ Approved advance total:', approvedAdvance)
+          console.log('⏳ Pending advances count:', pending)
+        } catch (error) {
+          console.error('Failed to fetch advances for active trip:', error)
+        }
+      } else {
+        console.log('ℹ️ No active trip found')
+      }
       
       // Fetch notifications
       try {
@@ -2884,6 +3811,15 @@ const EmployeeDashboard = () => {
       }
       
       setStats({
+        total_trips: trips.length,
+        active_trips: active ? 1 : 0,
+        completed_trips: completed,
+        pending_advances: pending,
+        total_advance_amount: approvedAdvance,
+        total_expense_amount: active?.total_expenses || 0
+      })
+      
+      console.log('📈 Dashboard stats:', {
         total_trips: trips.length,
         active_trips: active ? 1 : 0,
         completed_trips: completed,
@@ -3183,17 +4119,17 @@ const EmployeeDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* ✅ Financial Summary - APPROVED ADVANCE */}
-        {stats.total_advance_amount > 0 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Financial Summary
-              </CardTitle>
-              <CardDescription>Overview of your approved advances and expenses</CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* ✅ FIXED: Financial Summary - SELALU TAMPIL! */}
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Financial Summary
+            </CardTitle>
+            <CardDescription>Overview of your approved advances and expenses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {stats.total_advance_amount > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Approved Advance</p>
@@ -3221,9 +4157,17 @@ const EmployeeDashboard = () => {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="text-center py-8">
+                <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                <h3 className="text-lg font-semibold mb-2">No Approved Advances Yet</h3>
+                <p className="text-muted-foreground">
+                  Your advance requests will appear here once they are approved by Finance.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

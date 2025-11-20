@@ -925,6 +925,23 @@ export const userAPI = {
   getAll: (params?: any) => api.get('/users', { params }),
   getStatistics: () => api.get('/users/statistics'),
   
+// ✅ FIXED: Real-time validation endpoints with optional userId for edit mode
+  checkNik: (nik: string, userId?: number) => 
+    api.get('/users/check-nik', { 
+      params: { 
+        nik,
+        ...(userId && { user_id: userId })
+      } 
+    }),
+  
+  checkEmail: (email: string, userId?: number) => 
+    api.get('/users/check-email', { 
+      params: { 
+        email,
+        ...(userId && { user_id: userId })
+      } 
+    }),
+  
   // CRUD operations
   getById: (id: number) => api.get(`/users/${id}`),
   create: (data: any) => api.post('/users', data),
