@@ -735,7 +735,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plane, MapPin, Calendar, DollarSign, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { Plane, MapPin, Calendar, DollarSign, Clock, CheckCircle2, XCircle, AlertCircle,  LogOut  } from 'lucide-react'
 import AdvanceRequestsContent from './AdvanceRequestsContent'
 
 interface Trip {
@@ -835,41 +835,42 @@ export default function FinanceAreaDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ✅ UPDATED HEADER - WITH LOGOUT & USER NAME */}
-      <header className="bg-red-600 border-b shadow-soft">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/logo-telkom-akses.png" 
-              alt="Telkom Akses" 
-              className="h-10 w-auto bg-white rounded px-2 py-1"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
-            <div>
-              <h1 className="text-xl font-bold text-white">Finance Area Portal</h1>
-              <p className="text-sm text-white/90">Telkom Akses Business Trip Tracker</p>
-            </div>
-          </div>
-          
-          {/* ✅ USER INFO & LOGOUT BUTTON */}
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-white">{user?.name}</p>
-              <p className="text-xs text-white/70">{user?.role?.replace('_', ' ').toUpperCase()}</p>
-            </div>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={() => {
-                logout()
-                navigate('/login')
-              }}
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+    {/* ✅ UPDATED HEADER - WITH LOGOUT & USER NAME */}
+<header className="bg-red-600 border-b shadow-soft">
+  <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <img 
+        src="/logo-telkom-akses.png" 
+        alt="Telkom Akses" 
+        className="h-10 w-auto bg-white rounded px-2 py-1"
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
+      />
+      <div>
+        <h1 className="text-xl font-bold text-white">Finance Area Portal</h1>
+        <p className="text-sm text-white/90">Telkom Akses Business Trip Tracker</p>
+      </div>
+    </div>
+    
+    {/* ✅ USER INFO & LOGOUT BUTTON WITH ICON */}
+    <div className="flex items-center gap-3">
+      <div className="text-right">
+        <p className="text-sm font-medium text-white">{user?.name}</p>
+        <p className="text-xs text-white/70">{user?.role?.replace('_', ' ').toUpperCase()}</p>
+      </div>
+      <Button 
+        variant="secondary" 
+        size="sm"
+        onClick={() => {
+          logout()
+          navigate('/login')
+        }}
+      >
+        <LogOut className="w-4 h-4 mr-2" />
+        Logout
+      </Button>
+    </div>
+  </div>
+</header>
 
       {/* Main Content */}
       <div className="container max-w-7xl mx-auto px-4 py-8">
