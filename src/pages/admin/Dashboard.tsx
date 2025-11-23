@@ -1052,6 +1052,344 @@
 
 
 
+// import { useState, useEffect } from 'react'
+// import { useNavigate } from 'react-router-dom'
+// import { tripAPI } from '@/services/api'
+// import { useAuth } from '@/contexts/AuthContext'
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+// import { Button } from '@/components/ui/button'
+// import { Badge } from '@/components/ui/badge'
+// import { Plane, MapPin, Calendar, DollarSign, Clock, CheckCircle2, XCircle, AlertCircle, LogOut } from 'lucide-react'
+// import AdvanceRequestsContent from './AdvanceRequestsContent'
+
+// interface User {
+//   user_id: number
+//   name: string
+//   email: string
+//   nik: string
+//   department: string
+//   position: string
+// }
+
+// interface Trip {
+//   trip_id: number
+//   trip_number: string
+//   user_id: number
+//   destination: string
+//   purpose: string
+//   start_date: string
+//   end_date: string
+//   duration: number
+//   status: string
+//   total_advance: number
+//   total_expenses: number
+//   created_at: string
+//   user?: User  // ✅ ADD THIS!
+// }
+
+// const getStatusBadge = (status: string) => {
+//   const statusMap: Record<string, { icon: any; label: string; color: string }> = {
+//     active: { icon: Clock, label: 'Active', color: 'bg-blue-100 text-blue-800' },
+//     awaiting_review: { icon: Clock, label: 'Awaiting Review', color: 'bg-yellow-100 text-yellow-800' },
+//     under_review_area: { icon: AlertCircle, label: 'Under Review (Area)', color: 'bg-orange-100 text-orange-800' },
+//     under_review_regional: { icon: AlertCircle, label: 'Under Review (Regional)', color: 'bg-purple-100 text-purple-800' },
+//     completed: { icon: CheckCircle2, label: 'Completed', color: 'bg-green-100 text-green-800' },
+//     rejected: { icon: XCircle, label: 'Rejected', color: 'bg-red-100 text-red-800' },
+//     cancelled: { icon: XCircle, label: 'Cancelled', color: 'bg-gray-100 text-gray-800' },
+//   }
+
+//   const { icon: Icon, label, color } = statusMap[status] || statusMap.active
+
+//   return (
+//     <Badge className={`gap-1 ${color}`}>
+//       <Icon className="w-3 h-3" />
+//       {label}
+//     </Badge>
+//   )
+// }
+
+// export default function FinanceAreaDashboard() {
+//   const navigate = useNavigate()
+//   const { user, logout } = useAuth()
+  
+//   const [trips, setTrips] = useState<Trip[]>([])
+//   const [filterStatus, setFilterStatus] = useState<string>('all')
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   useEffect(() => {
+//     loadTrips()
+//   }, [])
+
+//   const loadTrips = async () => {
+//     try {
+//       setIsLoading(true)
+//       const response = await tripAPI.getAll()
+//       const allTrips = response.data.data || []
+      
+//       const tripsToReview = allTrips.filter((t: Trip) => 
+//         ['awaiting_review', 'under_review_area', 'under_review_regional', 'completed'].includes(t.status)
+//       )
+      
+//       setTrips(tripsToReview)
+//     } catch (error) {
+//       console.error('Failed to load trips:', error)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }
+
+//   const filteredTrips = filterStatus === 'all' 
+//     ? trips 
+//     : trips.filter(t => t.status === filterStatus)
+
+//   const stats = {
+//     all: trips.length,
+//     awaiting_review: trips.filter(t => t.status === 'awaiting_review').length,
+//     under_review_area: trips.filter(t => t.status === 'under_review_area').length,
+//     under_review_regional: trips.filter(t => t.status === 'under_review_regional').length,
+//     completed: trips.filter(t => t.status === 'completed').length,
+//   }
+
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('id-ID', {
+//       style: 'currency',
+//       currency: 'IDR',
+//       minimumFractionDigits: 0,
+//     }).format(amount)
+//   }
+
+//   const formatDate = (dateString: string) => {
+//     return new Date(dateString).toLocaleDateString('id-ID', {
+//       day: 'numeric',
+//       month: 'short',
+//       year: 'numeric'
+//     })
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background">
+//       {/* Header */}
+//       <header className="bg-red-600 border-b shadow-soft">
+//         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+//           <div className="flex items-center gap-3">
+//             <img 
+//               src="/logo-telkom-akses.png" 
+//               alt="Telkom Akses" 
+//               className="h-10 w-auto bg-white rounded px-2 py-1"
+//               onError={(e) => { e.currentTarget.style.display = 'none' }}
+//             />
+//             <div>
+//               <h1 className="text-xl font-bold text-white">Finance Area Portal</h1>
+//               <p className="text-sm text-white/90">Telkom Akses Business Trip Tracker</p>
+//             </div>
+//           </div>
+          
+//           <div className="flex items-center gap-3">
+//             <div className="text-right">
+//               <p className="text-sm font-medium text-white">{user?.name}</p>
+//               <p className="text-xs text-white/70">{user?.role?.replace('_', ' ').toUpperCase()}</p>
+//             </div>
+//             <Button 
+//               variant="secondary" 
+//               size="sm"
+//               onClick={() => {
+//                 logout()
+//                 navigate('/login')
+//               }}
+//             >
+//               <LogOut className="w-4 h-4 mr-2" />
+//               Logout
+//             </Button>
+//           </div>
+//         </div>
+//       </header>
+
+//       {/* Main Content */}
+//       <div className="container max-w-7xl mx-auto px-4 py-8">
+//         <Tabs defaultValue="advances" className="space-y-6">
+//           <TabsList className="grid w-full max-w-md grid-cols-2">
+//             <TabsTrigger value="advances">Advance Requests</TabsTrigger>
+//             <TabsTrigger value="settlements">Trip Settlements</TabsTrigger>
+//           </TabsList>
+
+//           {/* Tab 1: Advance Requests */}
+//           <TabsContent value="advances">
+//             <AdvanceRequestsContent />
+//           </TabsContent>
+
+//           {/* Tab 2: Trip Settlements */}
+//           <TabsContent value="settlements">
+//             {/* Title Section */}
+//             <div className="mb-8">
+//               <h2 className="text-3xl font-bold text-foreground mb-2">Trip Settlement Management</h2>
+//               <p className="text-muted-foreground">Review and approve trip settlements</p>
+//             </div>
+
+//             {/* Stats Cards */}
+//             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+//               <Card 
+//                 className={`cursor-pointer transition-all ${filterStatus === 'all' ? 'border-primary shadow-md' : ''}`}
+//                 onClick={() => setFilterStatus('all')}
+//               >
+//                 <CardHeader className="pb-3">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">All Trips</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold">{stats.all}</div>
+//                 </CardContent>
+//               </Card>
+
+//               <Card 
+//                 className={`cursor-pointer transition-all ${filterStatus === 'awaiting_review' ? 'border-yellow-600 shadow-md' : ''}`}
+//                 onClick={() => setFilterStatus('awaiting_review')}
+//               >
+//                 <CardHeader className="pb-3">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">Awaiting</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold text-yellow-600">{stats.awaiting_review}</div>
+//                 </CardContent>
+//               </Card>
+
+//               <Card 
+//                 className={`cursor-pointer transition-all ${filterStatus === 'under_review_area' ? 'border-orange-600 shadow-md' : ''}`}
+//                 onClick={() => setFilterStatus('under_review_area')}
+//               >
+//                 <CardHeader className="pb-3">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">Under Review</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold text-orange-600">{stats.under_review_area}</div>
+//                 </CardContent>
+//               </Card>
+
+//               <Card 
+//                 className={`cursor-pointer transition-all ${filterStatus === 'under_review_regional' ? 'border-purple-600 shadow-md' : ''}`}
+//                 onClick={() => setFilterStatus('under_review_regional')}
+//               >
+//                 <CardHeader className="pb-3">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">Regional</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold text-purple-600">{stats.under_review_regional}</div>
+//                 </CardContent>
+//               </Card>
+
+//               <Card 
+//                 className={`cursor-pointer transition-all ${filterStatus === 'completed' ? 'border-green-600 shadow-md' : ''}`}
+//                 onClick={() => setFilterStatus('completed')}
+//               >
+//                 <CardHeader className="pb-3">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+//                 </CardContent>
+//               </Card>
+//             </div>
+
+//             {/* Loading State */}
+//             {isLoading && (
+//               <div className="text-center py-12">
+//                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+//                 <p className="text-muted-foreground">Loading trips...</p>
+//               </div>
+//             )}
+
+//             {/* Trip List */}
+//             {!isLoading && (
+//               <div className="space-y-4">
+//                 {filteredTrips.length === 0 ? (
+//                   <Card>
+//                     <CardContent className="p-12 text-center">
+//                       <Plane className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+//                       <p className="text-muted-foreground">No trips found</p>
+//                     </CardContent>
+//                   </Card>
+//                 ) : (
+//                   filteredTrips.map(trip => (
+//                     <Card key={trip.trip_id} className="hover:shadow-md transition-shadow">
+//                       <CardContent className="p-6">
+//                         <div className="flex items-start justify-between">
+//                           <div className="flex items-start gap-4 flex-1">
+//                             <div className="bg-red-50 rounded-lg p-3">
+//                               <Plane className="h-6 w-6 text-red-600" />
+//                             </div>
+//                             <div className="flex-1">
+//                               <div className="flex items-start justify-between mb-2">
+//                                 <div>
+//                                   <h3 className="font-bold text-lg">{trip.destination}</h3>
+//                                   <p className="text-sm text-muted-foreground">{trip.trip_number}</p>
+//                                 </div>
+//                                 {getStatusBadge(trip.status)}
+//                               </div>
+//                               <p className="text-sm text-muted-foreground mb-3">{trip.purpose}</p>
+                              
+//                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+//                                 <div className="flex items-center gap-2">
+//                                   <MapPin className="w-4 h-4 text-muted-foreground" />
+//                                   <div>
+//                                     <p className="text-xs text-muted-foreground">Employee</p>
+//                                     <p className="font-medium">{trip.user?.name || '-'}</p>
+//                                   </div>
+//                                 </div>
+                                
+//                                 <div className="flex items-center gap-2">
+//                                   <Calendar className="w-4 h-4 text-muted-foreground" />
+//                                   <div>
+//                                     <p className="text-xs text-muted-foreground">Duration</p>
+//                                     <p className="font-medium">{trip.duration} days</p>
+//                                   </div>
+//                                 </div>
+                                
+//                                 <div className="flex items-center gap-2">
+//                                   <DollarSign className="w-4 h-4 text-muted-foreground" />
+//                                   <div>
+//                                     <p className="text-xs text-muted-foreground">Advance</p>
+//                                     <p className="font-medium">{formatCurrency(trip.total_advance || 0)}</p>
+//                                   </div>
+//                                 </div>
+                                
+//                                 <div className="flex items-center gap-2">
+//                                   <DollarSign className="w-4 h-4 text-muted-foreground" />
+//                                   <div>
+//                                     <p className="text-xs text-muted-foreground">Expenses</p>
+//                                     <p className="font-medium">{formatCurrency(trip.total_expenses || 0)}</p>
+//                                   </div>
+//                                 </div>
+//                               </div>
+//                             </div>
+//                           </div>
+                          
+//                           <Button
+//                             onClick={() => navigate(`/finance-area/trips/${trip.trip_id}`)}
+//                             className="ml-4"
+//                           >
+//                             View Details
+//                           </Button>
+//                         </div>
+//                       </CardContent>
+//                     </Card>
+//                   ))
+//                 )}
+//               </div>
+//             )}
+//           </TabsContent>
+//         </Tabs>
+//       </div>
+//     </div>
+//   )
+// }
+
+
+
+
+
+
+
+
+
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { tripAPI } from '@/services/api'
@@ -1085,15 +1423,14 @@ interface Trip {
   total_advance: number
   total_expenses: number
   created_at: string
-  user?: User  // ✅ ADD THIS!
+  user?: User
 }
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { icon: any; label: string; color: string }> = {
     active: { icon: Clock, label: 'Active', color: 'bg-blue-100 text-blue-800' },
     awaiting_review: { icon: Clock, label: 'Awaiting Review', color: 'bg-yellow-100 text-yellow-800' },
-    under_review_area: { icon: AlertCircle, label: 'Under Review (Area)', color: 'bg-orange-100 text-orange-800' },
-    under_review_regional: { icon: AlertCircle, label: 'Under Review (Regional)', color: 'bg-purple-100 text-purple-800' },
+    under_review_regional: { icon: AlertCircle, label: 'Under Review (Regional)', color: 'bg-orange-100 text-orange-800' },
     completed: { icon: CheckCircle2, label: 'Completed', color: 'bg-green-100 text-green-800' },
     rejected: { icon: XCircle, label: 'Rejected', color: 'bg-red-100 text-red-800' },
     cancelled: { icon: XCircle, label: 'Cancelled', color: 'bg-gray-100 text-gray-800' },
@@ -1127,8 +1464,12 @@ export default function FinanceAreaDashboard() {
       const response = await tripAPI.getAll()
       const allTrips = response.data.data || []
       
+      // ✅ FIX: Only show trips that Finance Area can handle
+      // awaiting_review = Finance Area needs to review
+      // under_review_regional = Forwarded to Regional (read-only for Area)
+      // completed = Trip completed (read-only)
       const tripsToReview = allTrips.filter((t: Trip) => 
-        ['awaiting_review', 'under_review_area', 'under_review_regional', 'completed'].includes(t.status)
+        ['awaiting_review', 'under_review_regional', 'completed'].includes(t.status)
       )
       
       setTrips(tripsToReview)
@@ -1146,7 +1487,6 @@ export default function FinanceAreaDashboard() {
   const stats = {
     all: trips.length,
     awaiting_review: trips.filter(t => t.status === 'awaiting_review').length,
-    under_review_area: trips.filter(t => t.status === 'under_review_area').length,
     under_review_regional: trips.filter(t => t.status === 'under_review_regional').length,
     completed: trips.filter(t => t.status === 'completed').length,
   }
@@ -1226,8 +1566,8 @@ export default function FinanceAreaDashboard() {
               <p className="text-muted-foreground">Review and approve trip settlements</p>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            {/* Stats Cards - ✅ FIXED: Remove under_review_area */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <Card 
                 className={`cursor-pointer transition-all ${filterStatus === 'all' ? 'border-primary shadow-md' : ''}`}
                 onClick={() => setFilterStatus('all')}
@@ -1245,7 +1585,7 @@ export default function FinanceAreaDashboard() {
                 onClick={() => setFilterStatus('awaiting_review')}
               >
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Awaiting</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Awaiting Review</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-yellow-600">{stats.awaiting_review}</div>
@@ -1253,26 +1593,14 @@ export default function FinanceAreaDashboard() {
               </Card>
 
               <Card 
-                className={`cursor-pointer transition-all ${filterStatus === 'under_review_area' ? 'border-orange-600 shadow-md' : ''}`}
-                onClick={() => setFilterStatus('under_review_area')}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Under Review</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">{stats.under_review_area}</div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className={`cursor-pointer transition-all ${filterStatus === 'under_review_regional' ? 'border-purple-600 shadow-md' : ''}`}
+                className={`cursor-pointer transition-all ${filterStatus === 'under_review_regional' ? 'border-orange-600 shadow-md' : ''}`}
                 onClick={() => setFilterStatus('under_review_regional')}
               >
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Regional</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Regional Review</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">{stats.under_review_regional}</div>
+                  <div className="text-2xl font-bold text-orange-600">{stats.under_review_regional}</div>
                 </CardContent>
               </Card>
 
