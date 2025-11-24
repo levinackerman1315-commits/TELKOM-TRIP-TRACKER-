@@ -8409,7 +8409,8 @@ export default function TripDetail() {
   const isTripEnded = currentDate > endDate
   const isTripStarted = currentDate >= startDate
 
-  const canRequestAdvance = trip.status === 'active'
+  // const canRequestAdvance = trip.status === 'active'
+  const canRequestAdvance = trip.status === 'active' && !isTripEnded
   const canUploadReceipt = trip.status === 'active' && isTripEnded
   const canRequestExtension = trip.status === 'active'
   const canSubmitForReview = trip.status === 'active' && isTripEnded && receipts.length > 0
@@ -8473,7 +8474,7 @@ export default function TripDetail() {
 
                 {trip.extended_end_date && (
                   <div className="pt-3 border-t">
-                    <label className="text-xs text-muted-foreground mb-1 block">Extended Until</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Trip Extended Until</label>
                     <p className="text-sm font-medium text-warning">{formatDate(trip.extended_end_date)}</p>
                     {trip.extension_reason && (
                       <p className="text-xs text-muted-foreground mt-1">{trip.extension_reason}</p>
@@ -8627,7 +8628,7 @@ export default function TripDetail() {
                       disabled={!canRequestExtension}
                     >
                       <Calendar className="w-4 h-4 mr-2" />
-                      Request Extension
+                     Extend Trip
                     </Button>
 
                     <div>
