@@ -1617,6 +1617,9 @@ export const tripAPI = {
     api.put(`/trips/${id}`, data),
   delete: (id: number) => 
     api.delete(`/trips/${id}`),
+
+    getOngoing: () => 
+    api.get('/trips/ongoing'),
   
   // Employee - Actions
   requestExtension: (id: number, data: any) => 

@@ -11966,7 +11966,7 @@ export default function TripDetail() {
                       variant="outline"
                       disabled={!canUploadReceipt}
                     >
-                      <ReceiptIcon className="w-4 w-4 mr-2" />
+                      <ReceiptIcon className="w-4 mr-2" />
                       Upload Receipt
                       {isCurrentlyExtended && (
                         <span className="ml-2 text-xs text-purple-600">(Locked)</span>
