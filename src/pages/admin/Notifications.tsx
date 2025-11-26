@@ -276,13 +276,13 @@ export default function FinanceAreaNotifications() {
                         {notification.link && (
                           <>
                             <span>•</span>
-                            <Link 
+                            {/* <Link 
                               to={notification.link}
                               className="text-primary hover:underline"
                               onClick={() => !notification.is_read && markAsRead(notification.notification_id)}
                             >
                               View details
-                            </Link>
+                            </Link> */}
                           </>
                         )}
                       </div>

@@ -2981,7 +2981,8 @@ import {
   XCircle,
   Eye,
   Settings,
-  Upload
+  Upload,
+  User
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import BulkUpload from './BulkUpload'
@@ -3161,7 +3162,7 @@ const Dashboard = () => {
                   className="text-white hover:bg-white/20" 
                   title="Profile Settings"
                 >
-                  <Settings className="w-5 h-5" />
+                  <User className="w-5 h-5" />
                 </Button>
               </Link>
 
